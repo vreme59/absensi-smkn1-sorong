@@ -241,6 +241,9 @@ export default function App() {
                     setSelectedStudentForAttachment(student);
                     setAttachmentModalMode('view'); // Just view for siswa
                   }}
+                  isDraftSavedOffline={isDraftSavedOffline}
+                  onNavigateHome={() => setCurrentTab('beranda')}
+                  containerWidthClass="max-w-md mx-auto"
                 />
               </div>
             ) : (
