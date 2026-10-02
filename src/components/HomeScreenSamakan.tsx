@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SCHEDULES_BY_DAY } from "../data/samakan/scheduleData";
 import { UserProfile, StudentAttendance, ClassAttendanceSummary, TeacherCallAlert } from '../types_samakan';
 
@@ -30,6 +30,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [showRekapModal, setShowRekapModal] = useState(false);
   const [showBanner, setShowBanner] = useState(teacherAlert.isActive);
   const [localStudents, setLocalStudents] = useState<StudentAttendance[]>(students);
+
+  const [currentTime, setCurrentTime] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  const timeString = currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
+
 
   // Form state for leave submission
   const [izinName, setIzinName] = useState('Kevin Pratama');
@@ -159,7 +167,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
             <div className="text-right">
               <span className="font-label-sm text-[11px] text-primary-fixed font-semibold">
-                Bulan Mei
+                Bulan {currentTime.toLocaleDateString('id-ID', { month: 'long' })}
               </span>
               <div className="font-headline font-bold text-xl text-white">
                 {user.attendanceRate}%
