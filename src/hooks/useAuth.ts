@@ -62,8 +62,20 @@ export function useAuth() {
   }> => {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
+    // Cek apakah identifier adalah nama lengkap (Cari di profiles)
+    let finalUsername = identifier.trim();
+    const { data: profileLookup } = await supabase
+      .from('profiles')
+      .select('username')
+      .ilike('nama', finalUsername)
+      .single();
+
+    if (profileLookup?.username) {
+      finalUsername = profileLookup.username;
+    }
+
     // Email virtual: username@smkn1sorong.sch.id
-    const email = `${identifier.trim()}@smkn1sorong.sch.id`;
+    const email = `${finalUsername}@smkn1sorong.sch.id`;
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 

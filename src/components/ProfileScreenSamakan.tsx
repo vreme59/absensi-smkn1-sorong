@@ -19,23 +19,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [geofenceDistance, setGeofenceDistance] = useState<number>(35); // in meters (radius 100m)
   const isInsideGeofence = geofenceDistance <= 100;
 
-  const handleToggleGeofence = () => {
-    if (isInsideGeofence) {
-      setGeofenceDistance(320); // Outside campus
-      onShowToast(
-        'Simulasi Geofence',
-        'Anda berada di luar radius SMKN 1 Sorong (320m). Check-in terkunci.',
-        'warning'
-      );
-    } else {
-      setGeofenceDistance(35); // Inside campus
-      onShowToast(
-        'Simulasi Geofence',
-        'Anda berada di dalam radius zona presensi SMKN 1 Sorong (35m). Valid!',
-        'success'
-      );
-    }
-  };
+  
 
   return (
     <div className="flex flex-col w-full max-w-md mx-auto pb-24">
@@ -90,61 +74,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </span>
         </div>
 
-        {/* Biometric GPS Geofence Simulator (Fitur Khas Lomba Web AI) */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-xl bg-sky-50 text-primary flex items-center justify-center">
-                <span className="material-symbols-outlined notranslate text-[20px]">radar</span>
-              </span>
-              <div>
-                <h3 className="text-xs font-bold text-slate-900">
-                  Simulasi Geofence SMKN 1 Sorong
-                </h3>
-                <span className="text-[11px] text-slate-500">
-                  Radius Kampus: 100m • Posisi GPS Real-Time
-                </span>
-              </div>
-            </div>
-
-            <span
-              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                isInsideGeofence
-                  ? 'bg-emerald-100 text-emerald-800'
-                  : 'bg-rose-100 text-rose-800'
-              }`}
-            >
-              {isInsideGeofence ? 'DALAM RADIUS' : 'LUAR RADIUS'}
-            </span>
-          </div>
-
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-            <div>
-              <span className="text-[11px] text-slate-500 font-semibold block">
-                Jarak dari Gerbang SMKN 1 Sorong:
-              </span>
-              <span className="text-base font-bold text-slate-900">
-                {geofenceDistance} meter
-              </span>
-            </div>
-            <button
-              onClick={handleToggleGeofence}
-              className={`px-3 py-1.5 rounded-xl font-bold text-xs shadow-sm transition-all active:scale-95 ${
-                isInsideGeofence
-                  ? 'bg-amber-600 text-white hover:bg-amber-700'
-                  : 'bg-emerald-600 text-white hover:bg-emerald-700'
-              }`}
-            >
-              {isInsideGeofence ? 'Simulasi Ke Luar Sekolah' : 'Simulasi Masuk Sekolah'}
-            </button>
-          </div>
-
-          <p className="text-[11px] text-slate-500 leading-relaxed">
-            Koordinat Kampus: <code>0°52'31.1"S 131°15'31.7"E</code> (Jl. Pendidikan No. 1, Kota
-            Sorong, Papua Barat Daya). Presensi hanya dapat diautentikasi bila berada di dalam
-            radius hijau.
-          </p>
-        </div>
+        
 
         {/* Role Switcher Matrix for Jury Demo */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col gap-2.5">
