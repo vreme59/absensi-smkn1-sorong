@@ -38,7 +38,7 @@ export default function App() {
 
   // Old Attendance state
   const [oldStudents, setOldStudents] = useState<Student[]>(() => {
-    const saved = localStorage.getItem('smkn1_attendance_students');
+    const saved = localStorage.getItem('smkn1_attendance_students_v2');
     if (saved) {
       try { return JSON.parse(saved); } catch (e) { console.error(e); }
     }
@@ -131,13 +131,13 @@ export default function App() {
   };
 
   const handleSaveOfflineDraft = () => {
-    localStorage.setItem('smkn1_attendance_students', JSON.stringify(oldStudents));
+    localStorage.setItem('smkn1_attendance_students_v2', JSON.stringify(oldStudents));
     setIsDraftSavedOffline(true);
     showToast('Tersimpan', 'Draft presensi berhasil disimpan secara lokal (Offline)!', 'success');
   };
 
   const handleConfirmSubmit = () => {
-    localStorage.setItem('smkn1_attendance_students', JSON.stringify(oldStudents));
+    localStorage.setItem('smkn1_attendance_students_v2', JSON.stringify(oldStudents));
     setIsSubmitModalOpen(false);
     showToast('Berhasil', 'Draft berhasil dikirim untuk validasi!', 'success');
   };
