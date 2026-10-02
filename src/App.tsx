@@ -225,15 +225,25 @@ export default function App() {
 
         {currentTab === 'absensi' && (
           supabaseRole === 'siswa' ? (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] px-8 text-center gap-4 pt-8 max-w-md mx-auto">
-              <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center">
-                <span className="material-symbols-outlined notranslate text-red-500 text-4xl">lock</span>
+              <div className="w-full max-w-md mx-auto pb-20">
+                <AttendanceScreen
+                  readOnly={true}
+                  students={oldStudents}
+                  onUpdateStudentStatus={handleUpdateStudentStatus}
+                  onMarkAllPresent={handleMarkAllPresent}
+                  onOpenSubmitModal={() => setIsSubmitModalOpen(true)}
+                  onSaveOfflineDraft={handleSaveOfflineDraft}
+                  onViewAttachment={(student) => {
+                    setSelectedStudentForAttachment(student);
+                    setAttachmentModalMode('view');
+                  }}
+                  onEditNote={(student) => {
+                    setSelectedStudentForAttachment(student);
+                    setAttachmentModalMode('view'); // Just view for siswa
+                  }}
+                />
               </div>
-              <h3 className="font-bold text-slate-800 text-lg">Akses Terbatas</h3>
-              <p className="text-sm text-slate-500">Input absen hanya dapat dilakukan oleh <strong>Sekretaris Kelas</strong> atau <strong>Guru</strong>.</p>
-              <button onClick={() => setCurrentTab('beranda')} className="mt-2 px-6 py-2.5 bg-[#005fa0] text-white rounded-xl font-semibold text-sm">Kembali ke Beranda</button>
-            </div>
-          ) : (
+            ) : (
             <div className="w-full max-w-md mx-auto pb-20">
               <AttendanceScreen
                 students={oldStudents}

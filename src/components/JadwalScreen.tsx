@@ -9,11 +9,11 @@ interface JadwalScreenProps {
 export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast }) => {
   const [selectedDay, setSelectedDay] = useState('selasa');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedClass, setSelectedClass] = useState('XI RPL 1');
+  const [selectedClass, setSelectedClass] = useState('XII TKJ 1');
   const [showClassPicker, setShowClassPicker] = useState(false);
 
   const availableClasses = [
-    { id: 'XI RPL 1', name: 'XI RPL 1 (Rekayasa Perangkat Lunak 1)' },
+    { id: 'XII TKJ 1', name: 'XII TKJ 1 (Teknik Komputer Jaringan 1)' },
     { id: 'XI RPL 2', name: 'XI RPL 2 (Rekayasa Perangkat Lunak 2)' },
     { id: 'XI TKJ 1', name: 'XI TKJ 1 (Teknik Komputer Jaringan 1)' },
     { id: 'XII RPL 1', name: 'XII RPL 1 (Rekayasa Perangkat Lunak)' },
@@ -67,8 +67,8 @@ export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast }) => {
               </span>
             </div>
             <p className="text-xs text-primary-fixed">
-              {selectedClass === 'XI RPL 1'
-                ? 'Rekayasa Perangkat Lunak 1'
+              {selectedClass === 'XII TKJ 1'
+                ? 'Teknik Komputer Jaringan 1'
                 : 'Program Keahlian Informatika'}
             </p>
           </div>

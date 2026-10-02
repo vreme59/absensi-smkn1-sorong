@@ -13,6 +13,7 @@ import {
 import { AttendanceStatus, Student } from '../types/attendance';
 
 interface Props {
+  readOnly?: boolean;
   student: Student;
   onStatusChange: (status: AttendanceStatus) => void;
   onViewAttachment: () => void;
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export const StudentCard: React.FC<Props> = ({
+  readOnly = false,
   student,
   onStatusChange,
   onViewAttachment,
@@ -151,7 +153,8 @@ export const StudentCard: React.FC<Props> = ({
             <button
               key={val}
               type="button"
-              onClick={() => onStatusChange(val)}
+              disabled={readOnly}
+                    onClick={() => onStatusChange(val)}
               className={`h-9 rounded-lg text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
                 isSelected
                   ? selectedStyle
@@ -224,7 +227,7 @@ export const StudentCard: React.FC<Props> = ({
               <span className="text-xs font-bold">Keterangan Khusus &amp; Lampiran</span>
             </div>
             <button
-              onClick={onEditNote}
+              disabled={readOnly} onClick={onEditNote}
               className="text-xs text-[#005fa0] font-semibold hover:underline cursor-pointer"
               type="button"
             >

@@ -286,6 +286,8 @@ export const AttendanceScreen: React.FC<Props> = ({
         )}
       </div>
 
+      {!readOnly && (
+      <>
       {/* Sticky Bottom Bar - Perfectly aligned to containerWidthClass */}
       <div
         className={`fixed bottom-16 left-1/2 -translate-x-1/2 w-full ${containerWidthClass} z-40 bg-white/95 backdrop-blur-md px-4 py-2.5 shadow-[0_-8px_24px_rgba(0,95,160,0.12)] flex flex-col gap-2 border-t border-slate-200/90 transition-all`}
@@ -351,6 +353,8 @@ export const AttendanceScreen: React.FC<Props> = ({
           </button>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 };
