@@ -84,13 +84,9 @@ export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast }) => {
 
         {/* Wali Kelas Card */}
         <div className="mt-4 p-3 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center gap-3">
-          <img
-            alt="Wali Kelas"
-            className="w-10 h-10 rounded-full object-cover ring-2 ring-white/40"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsjqqNUms7en4dEsFynEe-Ynj70m9IRBQFAt4kd0q0EC86X5bcowEuKK7P8ESzZQ1GnZPacrA3xHhBPbyzvPgqXjtQzmUdbHn5A7iE7Obpm-e1QLGdAx5Fk04s125mVdFFPsqg4ka06-5JLRBZyHIjrxP65z71ILzB2zNoP6IS7AlEXCqB9WSOVtmqXTEZnVAJ_PElhjC9ooSUx9lDAf0vqxN8gwIyRKMT7mD_nWG0YUat6Ke_v5Cn"
-          />
+          
           <div className="flex flex-col min-w-0">
-            <span className="text-xs font-bold text-white">Wali Kelas: Ibu Dra. Hartini</span>
+            <span className="text-xs font-bold text-white">Wali Kelas: Din Purba</span>
             <span className="text-[11px] text-sky-100 flex items-center gap-1 truncate">
               <span className="material-symbols-outlined notranslate text-[13px]">meeting_room</span>
               Ruang Lab Komputer 2 (Gd. Barat)
@@ -309,70 +305,7 @@ export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast }) => {
         )}
       </div>
 
-      {/* Class Discipline Statistics Deck */}
-      <div className="px-4 mt-5">
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-xl bg-surface-container flex items-center justify-center text-primary">
-                <span className="material-symbols-outlined notranslate text-[18px]">query_stats</span>
-              </span>
-              <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400 block tracking-wider">
-                  STATISTIK REKAPITULASI
-                </span>
-                <h3 className="font-headline font-bold text-sm text-slate-900">
-                  Presensi Kelas {selectedClass}
-                </h3>
-              </div>
-            </div>
-            <span className="px-2 py-0.5 rounded-full bg-sky-100 text-primary text-xs font-bold">
-              Mei 2024
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div className="p-3 rounded-xl bg-surface-container-low border border-sky-100 flex flex-col">
-              <span className="text-xs text-slate-500 font-semibold">Tingkat Hadir</span>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-2xl font-bold text-primary">96.8%</span>
-                <span className="text-xs font-bold text-emerald-600">↗ +1.2%</span>
-              </div>
-              <span className="text-[11px] text-slate-500 mt-1">Sangat Disiplin</span>
-            </div>
-
-            <div className="p-3 rounded-xl bg-surface-container-low border border-sky-100 flex flex-col">
-              <span className="text-xs text-slate-500 font-semibold">Siswa Bolos</span>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-2xl font-bold text-slate-900">0</span>
-                <span className="text-xs font-bold text-slate-500">Siswa</span>
-              </div>
-              <span className="text-[11px] text-amber-700 font-bold mt-1">
-                Bebas Pelanggaran 🔥
-              </span>
-            </div>
-          </div>
-
-          {/* Target Progress Bar */}
-          <div className="flex flex-col gap-1 pt-1">
-            <div className="flex items-center justify-between text-xs font-bold">
-              <span className="text-slate-700">Target Kedisiplinan Sekolah</span>
-              <span className="text-primary">Target: 95.0% (Tercapai)</span>
-            </div>
-            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-              <div className="bg-primary h-full rounded-full" style={{ width: '96.8%' }}></div>
-            </div>
-          </div>
-
-          <button
-            onClick={handleExportExcel}
-            className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow flex items-center justify-center gap-2 active:scale-98 transition-all"
-          >
-            <span className="material-symbols-outlined notranslate text-[18px]">table_view</span>
-            <span>Export Excel Jadwal &amp; Rekap (.xlsx)</span>
-          </button>
-        </div>
-      </div>
+      
 
       {/* Official Disclaimer Notice Box */}
       <div className="px-4 mt-3">

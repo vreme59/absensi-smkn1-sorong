@@ -109,7 +109,7 @@ export const AttendanceScreen: React.FC<Props> = ({
         <div className="flex items-center justify-between bg-[#0078c8]/30 px-3 py-1.5 rounded-xl mt-1 border border-sky-400/20">
           <div className="flex items-center gap-1.5 text-[#d1e4ff]">
             <span className="material-symbols-outlined notranslate text-[16px]">event_available</span>
-            <span className="text-xs font-semibold">Selasa, 14 Mei 2024</span>
+            <span className="text-xs font-semibold">{new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
           </div>
           <div className="flex items-center gap-1 text-[#ffdbc8] text-[11px] font-bold bg-[#bb5800]/30 px-2 py-0.5 rounded-full border border-amber-500/20">
             <span className="material-symbols-outlined notranslate text-[13px]">alarm</span>

@@ -729,7 +729,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-bold text-base text-slate-900">
-                  Rekap Kehadiran Bulan Mei 2024
+                  Rekap Kehadiran Bulan {new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
                 </h3>
                 <p className="text-xs text-slate-500">
                   Kelas XII TKJ 1 • Semester Genap T.A 2024/2025
@@ -762,23 +762,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
                 Riwayat Ketidakhadiran Kelas
               </h4>
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
-                <div>
-                  <span className="font-bold text-slate-800">Senin, 13 Mei 2024</span>
-                  <span className="block text-[11px] text-slate-500">
-                    Ahmad Dani (Sakit), Cindy Laura (Izin FLS2N)
-                  </span>
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center text-xs text-slate-500 italic">
+                  Belum ada riwayat kehadiran yang diekspor.
                 </div>
-                <span className="font-bold text-emerald-600">32/34 Hadir</span>
-              </div>
-
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
-                <div>
-                  <span className="font-bold text-slate-800">Jumat, 10 Mei 2024</span>
-                  <span className="block text-[11px] text-slate-500">Semua siswa hadir penuh</span>
-                </div>
-                <span className="font-bold text-emerald-600">34/34 Hadir (100%)</span>
-              </div>
             </div>
 
             <button
@@ -786,7 +772,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 setShowRekapModal(false);
                 onShowToast(
                   'Rekap Terunduh',
-                  'File Rekap_Mei_XI_RPL_1.pdf berhasil diunduh.',
+                  `File Rekap_${new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }).replace(' ', '_')}_XII_TKJ_1.pdf berhasil diunduh.`,
                   'info'
                 );
               }}
