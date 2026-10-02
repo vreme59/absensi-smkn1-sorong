@@ -144,26 +144,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </div>
         </div>
 
-        {/* View / Download Standalone HTML Code Button */}
-        <div className="bg-gradient-to-r from-sky-600 to-primary text-white rounded-2xl p-4 shadow-md flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white">
-              <span className="material-symbols-outlined notranslate text-[22px]">html</span>
-            </span>
-            <div>
-              <h4 className="font-bold text-xs">Unduh / Salin Kode HTML</h4>
-              <p className="text-[11px] text-sky-100">
-                Dapatkan kode HTML standalone siap tempel untuk 4 mockup
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onOpenHtmlModal}
-            className="px-3 py-2 rounded-xl bg-white text-primary font-bold text-xs shadow hover:bg-sky-50 active:scale-95 transition-all"
-          >
-            Lihat Kode
-          </button>
-        </div>
+        
 
         {/* Logout Button */}
         <button

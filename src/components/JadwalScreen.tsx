@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { UserProfile } from '../types_samakan';
 import { SCHEDULE_DAYS, SCHEDULES_BY_DAY } from '../data/samakan/scheduleData';
 import { ScheduleItem } from '../types_samakan';
 
@@ -6,7 +7,7 @@ interface JadwalScreenProps {
   onShowToast: (title: string, desc: string, type?: 'success' | 'warning' | 'info') => void;
 }
 
-export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast }) => {
+export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast, user }) => {
   const [selectedDay, setSelectedDay] = useState('selasa');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClass, setSelectedClass] = useState('XII TKJ 1');
@@ -86,7 +87,7 @@ export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast }) => {
         <div className="mt-4 p-3 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center gap-3">
           
           <div className="flex flex-col min-w-0">
-            <span className="text-xs font-bold text-white">Wali Kelas: Din Purba</span>
+            <span className="text-xs font-bold text-white">Wali Kelas: Dinaria Purba, A.Md, S.Pd</span>
             <span className="text-[11px] text-sky-100 flex items-center gap-1 truncate">
               <span className="material-symbols-outlined notranslate text-[13px]">meeting_room</span>
               Ruang Lab Komputer 2 (Gd. Barat)

@@ -220,7 +220,7 @@ export default function App() {
         )}
 
         {currentTab === 'jadwal' && (
-          <JadwalScreen onShowToast={showToast} />
+          <JadwalScreen onShowToast={showToast} user={currentUser} />
         )}
 
         {currentTab === 'absensi' && (
