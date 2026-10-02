@@ -1,7 +1,6 @@
 import { UserProfile, StudentAttendance, ClassAttendanceSummary, TeacherCallAlert } from '../types';
 
-export const SCHOOL_LOGO =
-  'https://lh3.googleusercontent.com/aida/AEtjO1W9rn4mcj87694X5B7-tJf8vbX-pFRuzXwmhdsD5w4Qze3r9vtvq6sodoyDWrU8inQpDWXYhQGVEfyxGOGWGgeod-ls4ZaYU-EijnOzzhiSoCKbd7GFi_C9zrRyBN1I0Nupm6o-oWwc1yAVFvfvtmWNNmEc87K-Bxa6bgul49AqIfXlG8byA0IaWSOFsdDNYPMPqhvYvtklYA-uNaseHw0YkMpiyIlZD_q7ofJ3VIZr3AFQpgsDRHQGkSw';
+export const SCHOOL_LOGO = '/logo-smk.png';
 
 export const USER_PROFILES: Record<string, UserProfile> = {
   sekretaris: {
