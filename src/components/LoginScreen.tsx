@@ -12,8 +12,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onOpenPublicSchedule,
 }) => {
   const [selectedRole, setSelectedRole] = useState<UserRole>('siswa');
-  const [identifier, setIdentifier] = useState('siswa_demo');
-  const [password, setPassword] = useState('Demo@2025');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -126,7 +126,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                     required
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="Masukkan username"
+                    placeholder="Ketik username Anda di sini..."
                     className="w-full h-12 pl-11 pr-4 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl font-body text-sm focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                   />
                 </div>
