@@ -4,6 +4,7 @@ import { StudentCard } from './StudentCard';
 import { ChevronDown, ChevronUp, Send } from 'lucide-react';
 
 interface Props {
+  readOnly?: boolean;
   students: Student[];
   onUpdateStudentStatus: (studentId: string, status: AttendanceStatus) => void;
   onMarkAllPresent: () => void;
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export const AttendanceScreen: React.FC<Props> = ({
+  readOnly = false,
   students,
   onUpdateStudentStatus,
   onMarkAllPresent,
@@ -275,8 +277,7 @@ export const AttendanceScreen: React.FC<Props> = ({
           </div>
         ) : (
           filteredStudents.map((student) => (
-            <StudentCard
-              key={student.id}
+            <StudentCard readOnly={readOnly} key={student.id}
               student={student}
               onStatusChange={(status) => onUpdateStudentStatus(student.id, status)}
               onViewAttachment={() => onViewAttachment(student)}
