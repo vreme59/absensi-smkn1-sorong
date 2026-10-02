@@ -1,0 +1,6 @@
+{
+  "name": "SMKN 1 Sorong - Student Hub & Presensi",
+  "description": "Aplikasi Presensi Siswa & Student Hub SMKN 1 Sorong dengan verifikasi berlapis, rekap real-time, dan kode React Native.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

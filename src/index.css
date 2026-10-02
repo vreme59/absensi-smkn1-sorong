@@ -1,0 +1,131 @@
+
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/material-symbols-outlined.woff2') format('woff2');
+  font-display: block;
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #005fa0;
+  --color-primary-container: #0078c8;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #fdfcff;
+  --color-primary-fixed: #d1e4ff;
+  --color-primary-fixed-dim: #9fcaff;
+  --color-on-primary-fixed: #001d36;
+  --color-on-primary-fixed-variant: #00497d;
+  --color-secondary: #0461a6;
+  --color-secondary-container: #74b4ff;
+  --color-on-secondary-container: #004579;
+  --color-secondary-fixed: #d2e4ff;
+  --color-secondary-fixed-dim: #a0c9ff;
+  --color-on-secondary-fixed: #001c37;
+  --color-on-secondary-fixed-variant: #00497f;
+  --color-tertiary: #954500;
+  --color-tertiary-container: #bb5800;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #fffbff;
+  --color-tertiary-fixed: #ffdbc8;
+  --color-tertiary-fixed-dim: #ffb68b;
+  --color-on-tertiary-fixed: #321200;
+  --color-on-tertiary-fixed-variant: #753400;
+  --color-surface: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e5eeff;
+  --color-surface-container-high: #dce9ff;
+  --color-surface-container-highest: #d3e4fe;
+  --color-surface-dim: #cbdbf5;
+  --color-surface-bright: #f8f9ff;
+  --color-surface-variant: #d3e4fe;
+  --color-on-surface: #0b1c30;
+  --color-on-surface-variant: #404752;
+  --color-outline: #707883;
+  --color-outline-variant: #bfc7d4;
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #93000a;
+  --color-inverse-surface: #213145;
+  --color-inverse-on-surface: #eaf1ff;
+
+  --font-headline: "Plus Jakarta Sans", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+/* Custom Spacing & Typography Utilities mapped from mockup */
+.font-headline-lg { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 30px; line-height: 38px; font-weight: 700; }
+.font-headline-lg-mobile { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 24px; line-height: 32px; font-weight: 700; }
+.font-headline-md { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; line-height: 28px; font-weight: 600; }
+.font-headline-sm { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; line-height: 24px; font-weight: 600; }
+.font-body-lg { font-family: 'Inter', sans-serif; font-size: 16px; line-height: 24px; }
+.font-body-md { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 20px; }
+.font-body-sm { font-family: 'Inter', sans-serif; font-size: 12px; line-height: 16px; }
+.font-label-lg { font-family: 'Inter', sans-serif; font-size: 14px; line-height: 20px; font-weight: 600; }
+.font-label-md { font-family: 'Inter', sans-serif; font-size: 12px; line-height: 16px; font-weight: 600; }
+.font-label-sm { font-family: 'Inter', sans-serif; font-size: 11px; line-height: 14px; font-weight: 700; }
+
+.px-margin { padding-left: 1rem; padding-right: 1rem; }
+.p-space-md { padding: 1rem; }
+.p-space-sm { padding: 0.5rem; }
+.p-space-lg { padding: 1.25rem; }
+.p-space-xs { padding: 0.25rem; }
+.p-space-xl { padding: 1.75rem; }
+
+.gap-space-xs { gap: 0.25rem; }
+.gap-space-sm { gap: 0.5rem; }
+.gap-space-md { gap: 1rem; }
+.gap-space-lg { gap: 1.25rem; }
+.gap-space-xl { gap: 1.75rem; }
+
+.pt-safe { padding-top: max(env(safe-area-inset-top, 0px), 0px); }
+.pb-safe { padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px); }
+
+/* Material Symbols configuration */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+}
+
+
+
+
+
+
+/* Fix for Material Symbols flashing text during load */
+.material-symbols-outlined {
+  white-space: nowrap !important;
+  word-wrap: normal !important;
+  overflow: hidden !important;
+  max-width: 1em !important;
+  display: inline-block;
+  vertical-align: bottom;
+}
