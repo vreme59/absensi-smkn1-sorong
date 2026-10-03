@@ -238,6 +238,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
     return <HomeScreenGuru user={user} onNavigateToTab={onNavigateToTab} onShowToast={onShowToast} classSummary={classSummary} students={students} teacherAlert={teacherAlert} onSendTeacherCall={onSendTeacherCall} onSubmitMorningDraft={onSubmitMorningDraft} />;
   }
 
+
   const [showAbsenModal, setShowAbsenModal] = useState(false);
   const [showIzinModal, setShowIzinModal] = useState(false);
   const [showRekapModal, setShowRekapModal] = useState(false);
@@ -246,7 +247,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
 
   const [currentTime, setCurrentTime] = useState(new Date());
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime((window as any).DEBUG_TIME || new Date()), 1000);
+    const timer = setInterval(() => {
+      const dbgTime = (window as any).DEBUG_TIME;
+      if (typeof dbgTime === 'string' && dbgTime) {
+        const [h, m] = dbgTime.split(':');
+        const d = new Date();
+        d.setHours(parseInt(h, 10), parseInt(m, 10), 0);
+        setCurrentTime(d);
+      } else {
+        setCurrentTime(new Date());
+      }
+    }, 1000);
     return () => clearInterval(timer);
   }, []);
   const timeString = currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
@@ -657,69 +668,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
             </button>
           </div>
 
-          <div className="flex flex-col gap-2.5">
-            {(() => {
-              const dayNames = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
-              const todayName = dayNames[new Date().getDay()];
-              const schedule = SCHEDULES_BY_DAY[todayName] || [];
-              
-              if (schedule.length === 0) {
-                return (
-                  <div className="bg-white rounded-2xl p-6 text-center border border-slate-100 shadow-sm">
-                    <p className="text-slate-500 text-sm">Tidak ada jadwal hari ini. Selamat istirahat!</p>
-                  </div>
-                );
-              }
-              
-              return schedule.map((item, idx) => {
-                const parts = item.time.split('-');
-                const start = parts[0] ? parts[0].trim() : '';
-                const end = parts[1] ? parts[1].trim() : '';
-                const isLive = idx === 0; // The first item is marked LIVE for UI demonstration
-                
-                return (
-                  <div key={item.id} className={`relative bg-white rounded-2xl p-3.5 flex items-start gap-3 overflow-hidden border ${isLive ? 'shadow-[0_8px_24px_rgba(0,95,160,0.12)] ring-2 ring-primary border-sky-100' : 'shadow-sm border-slate-100'}`}>
-                    <div className={`${isLive ? 'w-2 bg-primary animate-pulse' : 'w-1.5 bg-secondary-container'} absolute left-0 top-0 bottom-0`}></div>
-                    <div className="w-12 flex flex-col items-center shrink-0">
-                      <span className={`font-bold text-xs ${isLive ? 'text-primary' : 'text-slate-800'}`}>{start}</span>
-                      <span className="text-[10px] text-slate-400">{end}</span>
-                      {isLive ? (
-                        <span className="px-1.5 py-0.5 mt-1.5 rounded bg-primary text-white font-bold text-[9px] animate-pulse">LIVE</span>
-                      ) : (
-                        <span className="material-symbols-outlined notranslate text-slate-400 text-[20px] mt-1.5">schedule</span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      {isLive && (
-                         <div className="flex items-center justify-between mb-1">
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Presensi Dibuka
-                          </span>
-                        </div>
-                      )}
-                      <h3 className="font-headline font-bold text-sm text-slate-900">{item.subject}</h3>
-                      {isLive ? (
-                        <div className="mt-2 flex items-center justify-between pt-2 border-t border-slate-100">
-                          <div className="flex flex-col">
-                            <span className="text-xs text-slate-900 font-semibold">{item.teacher}</span>
-                          </div>
-                          <button
-                            onClick={() => onNavigateToTab('absensi')}
-                            className="px-3 py-1.5 rounded-xl bg-primary text-white text-xs font-bold shadow hover:bg-primary-container active:scale-95 transition-all whitespace-nowrap"
-                            type="button"
-                          >
-                            Absen Mapel
-                          </button>
-                        </div>
-                      ) : (
-                        <p className="font-body text-xs text-slate-500 mt-1">{item.teacher}</p>
-                      )}
-                    </div>
-                  </div>
-                );
-              });
-            })()}
-          </div>
+          <LiveSessionCard 
+            user={user} 
+            currentTime={currentTime} 
+            onShowToast={onShowToast} 
+            onNavigateToTab={onNavigateToTab} 
+          />
         </div>
 
         {/* Quick Classroom Roster Preview Card */}
