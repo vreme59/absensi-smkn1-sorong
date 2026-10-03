@@ -12,7 +12,7 @@ interface JadwalScreenProps {
 // ============================================================
 // ABSENSI MODAL - Popup saat kelas di-klik
 // ============================================================
-interface AbsensiModalProps {
+export interface AbsensiModalProps {
   isOpen: boolean;
   onClose: () => void;
   jadwalItem: any;
@@ -20,9 +20,9 @@ interface AbsensiModalProps {
   onShowToast: (title: string, desc: string, type?: 'success' | 'warning' | 'info') => void;
 }
 
-type StatusAbsen = 'Hadir' | 'Izin' | 'Sakit' | 'Alfa' | 'Terlambat';
+export type StatusAbsen = 'Hadir' | 'Izin' | 'Sakit' | 'Alfa' | 'Terlambat';
 
-const statusColors: Record<StatusAbsen, string> = {
+export const statusColors: Record<StatusAbsen, string> = {
   Hadir: 'bg-emerald-100 text-emerald-700 border-emerald-200',
   Terlambat: 'bg-amber-100 text-amber-700 border-amber-200',
   Izin: 'bg-sky-100 text-sky-700 border-sky-200',
@@ -30,7 +30,7 @@ const statusColors: Record<StatusAbsen, string> = {
   Alfa: 'bg-red-100 text-red-700 border-red-200',
 };
 
-const statusBg: Record<StatusAbsen, string> = {
+export const statusBg: Record<StatusAbsen, string> = {
   Hadir: 'bg-emerald-500',
   Terlambat: 'bg-amber-500',
   Izin: 'bg-sky-500',
@@ -38,7 +38,7 @@ const statusBg: Record<StatusAbsen, string> = {
   Alfa: 'bg-red-500',
 };
 
-const AbsensiModal: React.FC<AbsensiModalProps> = ({ isOpen, onClose, jadwalItem, guruId, onShowToast }) => {
+export const AbsensiModal: React.FC<AbsensiModalProps> = ({ isOpen, onClose, jadwalItem, guruId, onShowToast }) => {
   const [students, setStudents] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<Record<string, StatusAbsen>>({});
   const [loading, setLoading] = useState(true);

@@ -1055,10 +1055,13 @@ export { HomeScreen as HomeScreenSamakan } from './HomeScreenSamakan';
 
 
 
+import { AbsensiModal } from './JadwalScreen';
+
 export const LiveSessionCard: React.FC<{ user: any, currentTime: Date, onShowToast: any, onNavigateToTab: any }> = ({ user, currentTime, onShowToast, onNavigateToTab }) => {
   const [liveSession, setLiveSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ hadir: 0, sakit: 0, izin: 0, alfa: 0 });
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -1072,12 +1075,20 @@ export const LiveSessionCard: React.FC<{ user: any, currentTime: Date, onShowToa
         const hariIni = hariNames[currentDayIndex];
         const nowMin = currentTime.getHours() * 60 + currentTime.getMinutes();
 
-        // fetch today's schedules for guru
-        const { data: schedules } = await supabase
+        // fetch today's schedules for guru OR siswa
+        let query = supabase
           .from('jadwal')
-          .select('id, jam_mulai, jam_selesai, mapel:mapel_id(nama), kelas:kelas_id(id, nama)')
-          .eq('guru_id', user.id)
+          .select('id, jam_mulai, jam_selesai, mapel:mapel_id(nama), kelas:kelas_id(id, nama), guru_id')
           .eq('hari', hariIni);
+          
+        if (user.role === 'guru') {
+          query = query.eq('guru_id', user.id);
+        } else {
+          // fallback to XII TKJ 1 if mocked
+          query = query.eq('kelas_id', user.kelas_id || 'e88128be-8fc3-4973-8d69-00ef17571626');
+        }
+
+        const { data: schedules } = await query;
 
         if (!schedules || schedules.length === 0) {
           if (isMounted) { setLiveSession(null); setLoading(false); }
@@ -1188,8 +1199,12 @@ export const LiveSessionCard: React.FC<{ user: any, currentTime: Date, onShowToa
           <span className="text-slate-500 text-[11px] font-medium">{liveSession.jam_mulai.substring(0,5)} - {liveSession.jam_selesai.substring(0,5)} WIT ({liveSession.actualDuration || total} Mnt)</span>
         </div>
 
-        <h2 className="text-[20px] font-headline font-bold text-slate-800 leading-tight mb-4">
+        <h2 
+          className="text-[20px] font-headline font-bold text-slate-800 leading-tight mb-4 cursor-pointer hover:text-primary transition-colors flex items-center gap-2"
+          onClick={() => setIsModalOpen(true)}
+        >
           {mapelNama}
+          <span className="material-symbols-outlined notranslate text-primary text-[18px] opacity-70">open_in_new</span>
         </h2>
 
         <div className="flex flex-col gap-1.5 mb-5">
@@ -1223,15 +1238,22 @@ export const LiveSessionCard: React.FC<{ user: any, currentTime: Date, onShowToa
 
         <button 
           onClick={() => {
-            onShowToast('Mengarahkan', 'Buka tab Jadwal untuk mengubah absensi', 'info');
-            onNavigateToTab('jadwal');
+            setIsModalOpen(true);
           }}
           className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-[14px] shadow-lg shadow-primary/30 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
         >
           <span className="material-symbols-outlined notranslate text-[18px]">how_to_reg</span>
-          Kelola Absen Kelas Ini
+          {user.role === 'guru' ? 'Kelola Absen Kelas Ini' : 'Isi Presensi Kelas Sekarang'}
         </button>
       </div>
+
+      <AbsensiModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        jadwalItem={liveSession}
+        guruId={liveSession.guru_id}
+        onShowToast={onShowToast}
+      />
     </div>
   );
 };
