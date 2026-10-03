@@ -1155,7 +1155,7 @@ export const LiveSessionCard: React.FC<{ user: any, currentTime: Date, onShowToa
 
         <h2 
           className="text-[20px] font-headline font-bold text-slate-800 leading-tight mb-4 cursor-pointer hover:text-primary transition-colors flex items-center gap-2"
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => onNavigateToTab('absensi')}
         >
           {mapelNama}
           <span className="material-symbols-outlined notranslate text-primary text-[18px] opacity-70">open_in_new</span>
@@ -1191,23 +1191,13 @@ export const LiveSessionCard: React.FC<{ user: any, currentTime: Date, onShowToa
         </div>
 
         <button 
-          onClick={() => {
-            setIsModalOpen(true);
-          }}
+          onClick={() => onNavigateToTab('absensi')}
           className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-[14px] shadow-lg shadow-primary/30 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
         >
           <span className="material-symbols-outlined notranslate text-[18px]">how_to_reg</span>
           {user.role === 'guru' ? 'Kelola Absen Kelas Ini' : 'Isi Presensi Kelas Sekarang'}
         </button>
       </div>
-
-      <AbsensiModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        jadwalItem={liveSession}
-        guruId={liveSession.guru_id}
-        onShowToast={onShowToast}
-      />
     </div>
   );
 };
