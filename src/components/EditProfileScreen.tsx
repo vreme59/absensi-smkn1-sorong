@@ -72,7 +72,7 @@ export const EditProfileScreen: React.FC<{onBack: () => void}> = ({ onBack }) =>
   };
 
   return (
-    <div className="w-full min-h-screen bg-slate-50 flex flex-col relative pb-20 selection:bg-[#005fa0] selection:text-white">
+    <div className="w-full max-w-md mx-auto min-h-screen bg-slate-50 flex flex-col relative pb-20 selection:bg-[#005fa0] selection:text-white shadow-xl sm:border-x sm:border-slate-200">
       {/* Navigation Bar */}
         <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-100 shadow-[0_1px_4px_rgba(0,0,0,0.03)]">
           <div className="flex items-center gap-2">
