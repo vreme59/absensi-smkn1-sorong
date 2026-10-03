@@ -16,6 +16,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onLogout,
   onOpenHtmlModal,
   onShowToast,
+  onEditProfile
 }) => {
   const [geofenceDistance, setGeofenceDistance] = useState<number>(35); // in meters (radius 100m)
   const isInsideGeofence = geofenceDistance <= 100;
