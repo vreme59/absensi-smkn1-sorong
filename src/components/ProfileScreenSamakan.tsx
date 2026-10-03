@@ -76,87 +76,70 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
         
 
-        {/* Role Switcher Matrix for Jury Demo */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col gap-2.5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-              Uji Privilege Role (Mode Demo Juri)
+        {/* Pengaturan & Informasi */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col gap-3">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1">
+              Pengaturan &amp; Informasi
             </h3>
-            <span className="text-[10px] text-primary font-bold">1-Tap Switch</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              {
-                id: 'sekretaris',
-                title: 'Sekretaris Kelas',
-                desc: 'Input absen pagi, panggil guru',
-                icon: 'workspace_premium',
-              },
-              {
-                id: 'guru',
-                title: 'Guru Pengajar',
-                desc: 'Validasi lapis 2, bolos mapel',
-                icon: 'school',
-              },
-              {
-                id: 'siswa',
-                title: 'Siswa Mandiri',
-                desc: 'Jadwal, streak, izin',
-                icon: 'account_circle',
-              },
-              {
-                id: 'admin',
-                title: 'Admin Kurikulum',
-                desc: 'Master Dapodik & RLS',
-                icon: 'admin_panel_settings',
-              },
-            ].map((r) => {
-              const isActive = user.role === r.id;
-              return (
-                <button
-                  key={r.id}
-                  onClick={() => {
-                    onSelectRole(r.id as UserRole);
-                    onShowToast(
-                      'Role Diperbarui',
-                      `Tampilan beralih ke hak akses [${r.title.toUpperCase()}].`,
-                      'info'
-                    );
-                  }}
-                  className={`p-2.5 rounded-xl border text-left flex flex-col gap-1 transition-all ${
-                    isActive
-                      ? 'bg-sky-50 border-primary text-primary shadow-sm'
-                      : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="material-symbols-outlined notranslate text-[20px]">{r.icon}</span>
-                    {isActive && (
-                      <span className="w-2 h-2 rounded-full bg-primary"></span>
-                    )}
+            
+            <div className="flex flex-col gap-2">
+              <button 
+                onClick={() => onShowToast('Fitur Terkunci', 'Fitur edit profil sedang dinonaktifkan oleh Admin.', 'warning')}
+                className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-sky-100 text-primary flex items-center justify-center">
+                    <span className="material-symbols-outlined notranslate text-[18px]">manage_accounts</span>
+                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-800">Edit Profil &amp; Foto</span>
+                    <span className="text-[10px] text-slate-500">Ubah foto atau data diri</span>
                   </div>
-                  <span className="text-xs font-bold">{r.title}</span>
-                  <span className="text-[10px] text-slate-500 leading-tight">{r.desc}</span>
-                </button>
-              );
-            })}
+                </div>
+                <span className="material-symbols-outlined notranslate text-slate-400 text-[18px]">chevron_right</span>
+              </button>
+
+              <button 
+                onClick={() => onShowToast('Ubah Kata Sandi', 'Hubungi Admin Kurikulum untuk mereset kata sandi Anda.', 'info')}
+                className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                    <span className="material-symbols-outlined notranslate text-[18px]">password</span>
+                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-800">Ubah Kata Sandi</span>
+                    <span className="text-[10px] text-slate-500">Perbarui keamanan akun</span>
+                  </div>
+                </div>
+                <span className="material-symbols-outlined notranslate text-slate-400 text-[18px]">chevron_right</span>
+              </button>
+              
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                    <span className="material-symbols-outlined notranslate text-[18px]">calendar_today</span>
+                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-800">Tahun Ajaran</span>
+                    <span className="text-[10px] text-slate-500">2024/2025 - Semester Ganjil</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-
-        
-
-        {/* Logout Button */}
+  
+          {/* Logout Button */}
         <button
           onClick={onLogout}
           className="w-full py-3 rounded-2xl bg-white border border-rose-200 text-error hover:bg-rose-50 font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-98 transition-all"
         >
           <span className="material-symbols-outlined notranslate text-[18px]">logout</span>
-          <span>Keluar ke Mode Demo Juri (Login Screen)</span>
+          <span>Keluar dari Akun</span>
         </button>
 
         <p className="text-[11px] text-center text-slate-400 pb-4">
-          SMK Negeri 1 Sorong • Versi Aplikasi 2.4.0 (Build AI Web Lomba 2024)
+          SMK Negeri 1 Sorong • Versi Aplikasi 2.4.0
         </p>
       </div>
     </div>

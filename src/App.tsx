@@ -273,10 +273,8 @@ export default function App() {
         {currentTab === 'profil' && (
           <ProfileScreen
             user={currentUser}
-            onSelectRole={() => {}}
-            onLogout={handleLogout}
-            onOpenHtmlModal={() => {}}
-            onShowToast={showToast}
+                        onLogout={handleLogout}
+                        onShowToast={showToast}
           />
         )}
       </main>
