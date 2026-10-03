@@ -14,6 +14,7 @@ import { HomeScreen } from './components/HomeScreenSamakan';
 import { LoginScreen } from './components/LoginScreen';
 import { JadwalScreen } from './components/JadwalScreen';
 import { ProfileScreen } from './components/ProfileScreenSamakan';
+import { EditProfileScreen } from './components/EditProfileScreen';
 import { ClassAttendanceSummary, StudentAttendance, TeacherCallAlert, UserRole } from './types_samakan';
 import { useAuth } from './hooks/useAuth';
 
@@ -27,7 +28,7 @@ export default function App() {
 
   // --- UI State ---
   const [isGuestPublic, setIsGuestPublic] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'beranda' | 'jadwal' | 'absensi' | 'profil'>('beranda');
+  const [currentTab, setCurrentTab] = useState<'beranda' | 'jadwal' | 'absensi' | 'profil' | 'edit-profil'>('beranda');
   const [toast, setToast] = useState<ToastData | null>(null);
   
   // Samakan state
@@ -195,7 +196,7 @@ export default function App() {
   // --- Main App ---
   return (
     <div className="min-h-screen bg-surface flex flex-col justify-between font-body text-on-surface">
-      <Navbar currentTab={currentTab} user={currentUser} onSelectRole={() => {}} onOpenHtmlModal={() => {}} />
+      {currentTab !== 'edit-profil' && <Navbar currentTab={currentTab} user={currentUser} onSelectRole={() => {}} onOpenHtmlModal={() => {}} />}
 
       {isGuestPublic && (
         <div className="fixed top-16 left-0 right-0 z-30 bg-amber-500 text-amber-950 px-4 py-1.5 text-xs font-bold flex items-center justify-between shadow-sm">
@@ -270,6 +271,10 @@ export default function App() {
           )
         )}
 
+
+        {currentTab === 'edit-profil' && (
+          <EditProfileScreen onBack={() => setCurrentTab('profil')} />
+        )}
         {currentTab === 'profil' && (
           <ProfileScreen
             user={currentUser}
@@ -279,12 +284,14 @@ export default function App() {
         )}
       </main>
 
-      <BottomNav
-        currentTab={currentTab}
-        onTabChange={(tab) => setCurrentTab(tab as any)}
-        userRole={currentUser.role}
-        pendingValidationCount={classSummary.validationStatus === 'menunggu_acc' ? 1 : 0}
-      />
+      {currentTab !== 'edit-profil' && (
+        <BottomNav
+          currentTab={currentTab}
+          onTabChange={(tab) => setCurrentTab(tab as any)}
+          userRole={currentUser.role}
+          pendingValidationCount={classSummary.validationStatus === 'menunggu_acc' ? 1 : 0}
+        />
+      )}
 
       <Toast toast={toast} onClose={() => setToast(null)} />
 

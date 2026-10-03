@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { UserProfile, UserRole } from '../types_samakan';
 
 interface ProfileScreenProps {
+  onEditProfile?: () => void;
   user: UserProfile;
   onSelectRole: (role: UserRole) => void;
   onLogout: () => void;
@@ -72,7 +73,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             
             <div className="flex flex-col gap-5">
               <button 
-                onClick={() => onShowToast('Fitur Terkunci', 'Fitur edit profil sedang dinonaktifkan oleh Admin.', 'warning')}
+                onClick={onEditProfile}
                 className="flex items-center justify-between w-full group active:scale-[0.98] transition-transform text-left"
               >
                 <div className="flex items-center gap-4">
