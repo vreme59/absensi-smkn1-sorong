@@ -1,27 +1,30 @@
-import React, { useState, useRef } from 'react';
-
-// Default initial student data matching the screenshot
-const INITIAL_STUDENT_DATA = {
-  fullName: 'Prima Adi Nugraha Soltif',
-  classMajor: 'XII TKJ 1 - Teknik Komputer & Jaringan',
-  academicYear: '2024/2025',
-  email: 'prima.adi@smkn1sorong.sch.id',
-  phone: '+62 821-9876-5432',
-  avatarUrl:
-    'https://lh3.googleusercontent.com/aida/AEtjO1WXFxrh8NGKphbs6TkBNJGxfwQ_HklMCuROSehIbYPt-Rc4SG75Fo7IxWhBUrZvI4hdGo-_uGFpzCkdpGY0ROZzFQRHM_i3ii5fLjfKY-z3_PoxFtxJxqFao_poZ1CpctkdX3MmQhl6LJTNThhGd5oyjdT38WtumgJfPC9ohWGB834t8mMeZey6xe2KMxwrNhNINcqvCNsjAc9aVmaESoC8ou6yqgZ6A1nvh2E1NpxVkeRIUeuJADHuwSg',
-};
+import React, { useState, useRef, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import { UserProfile } from '../types_samakan';
 
 // Fallback high-quality avatar if network image is blocked
 const FALLBACK_AVATAR =
   'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=400&q=80';
 
-export const EditProfileScreen: React.FC<{onBack: () => void}> = ({ onBack }) => {
-  const [formData, setFormData] = useState(INITIAL_STUDENT_DATA);
-  const [avatar, setAvatar] = useState(INITIAL_STUDENT_DATA.avatarUrl);
+export const EditProfileScreen: React.FC<{
+  onBack: () => void;
+  user: UserProfile;
+  onProfileUpdated: (updated: Partial<UserProfile>) => void;
+}> = ({ onBack, user, onProfileUpdated }) => {
+  const [formData, setFormData] = useState({
+    fullName: user.name,
+    classMajor: user.roleTitle, // display only
+    academicYear: '2024/2025', // display only
+    email: user.identifier, // display only
+    phone: user.phone || '',
+  });
+
+  const [avatar, setAvatar] = useState(user.avatarUrl || FALLBACK_AVATAR);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarError, setAvatarError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('Profil siswa berhasil diperbarui!');
+  const [toastMessage, setToastMessage] = useState('Profil berhasil diperbarui!');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -33,156 +36,194 @@ export const EditProfileScreen: React.FC<{onBack: () => void}> = ({ onBack }) =>
         showFeedbackToast('Ukuran foto maksimal 5 MB.');
         return;
       }
+      setAvatarFile(file);
       const reader = new FileReader();
       reader.onload = (event) => {
         if (event.target?.result) {
           setAvatar(event.target.result as string);
-          showFeedbackToast('Foto profil berhasil dipilih!');
+          showFeedbackToast('Foto profil dipilih! Jangan lupa simpan.');
         }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Toast feedback helper
   const showFeedbackToast = (msg: string) => {
     setToastMessage(msg);
     setShowToast(true);
-    setTimeout(() => {
-      setShowToast(false);
-    }, 3200);
+    setTimeout(() => setShowToast(false), 3000);
   };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Tidak ada sesi login aktif.');
+      
+      const userId = session.user.id;
+      let newAvatarUrl = avatar;
 
-    setTimeout(() => {
-      setIsSaving(false);
+      // 1. Upload foto jika ada file baru
+      if (avatarFile) {
+        const fileExt = avatarFile.name.split('.').pop();
+        const fileName = `${userId}_${Date.now()}.${fileExt}`;
+        const filePath = `${userId}/${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, avatarFile, { upsert: true });
+          
+        if (uploadError) {
+          console.error('Avatar upload error:', uploadError);
+          showFeedbackToast('Gagal mengupload foto profil.');
+          setIsSaving(false);
+          return;
+        }
+        
+        const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
+        newAvatarUrl = publicUrl;
+      }
+
+      // 2. Update profiles table
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          nama: formData.fullName,
+          phone: formData.phone,
+          avatar_url: newAvatarUrl !== FALLBACK_AVATAR ? newAvatarUrl : null
+        })
+        .eq('id', userId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
       showFeedbackToast('Profil siswa berhasil diperbarui!');
-    }, 600);
+      
+      // Update parent state
+      onProfileUpdated({
+        name: formData.fullName,
+        phone: formData.phone,
+        avatarUrl: newAvatarUrl
+      });
+      
+    } catch (err: any) {
+      console.error('Error updating profile:', err);
+      showFeedbackToast('Terjadi kesalahan saat menyimpan.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Handle form reset
   const handleReset = () => {
-    setFormData(INITIAL_STUDENT_DATA);
-    setAvatar(INITIAL_STUDENT_DATA.avatarUrl);
+    setFormData({
+      fullName: user.name,
+      classMajor: user.roleTitle,
+      academicYear: '2024/2025',
+      email: user.identifier,
+      phone: user.phone || '',
+    });
+    setAvatar(user.avatarUrl || FALLBACK_AVATAR);
+    setAvatarFile(null);
     showFeedbackToast('Perubahan dibatalkan.');
   };
 
   return (
     <div className="w-full max-w-md mx-auto min-h-screen bg-slate-50 flex flex-col relative pb-20 selection:bg-[#005fa0] selection:text-white shadow-xl sm:border-x sm:border-slate-200">
       {/* Navigation Bar */}
-        <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-100 shadow-[0_1px_4px_rgba(0,0,0,0.03)]">
-          <div className="flex items-center gap-2">
-            {/* Back Button */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-100 shadow-[0_1px_4px_rgba(0,0,0,0.03)]">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onBack}
+            className="w-10 h-10 -ml-1 rounded-full flex items-center justify-center text-slate-800 hover:bg-slate-100 active:scale-95 transition-all"
+          >
+            <span className="material-symbols-outlined text-[24px]">arrow_back</span>
+          </button>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#005fa0] text-white flex items-center justify-center">
+              <span className="material-symbols-outlined text-[18px]">school</span>
+            </div>
+            <h1 className="font-bold text-[#0b1c30] text-[15px] tracking-tight">Edit Profile</h1>
+          </div>
+        </div>
+        <img
+          src={avatar}
+          alt="Current User"
+          className="w-7 h-7 rounded-full object-cover ring-2 ring-slate-100"
+        />
+      </header>
+
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        {/* Ocean Header Header with Interactive Avatar */}
+        <div className="bg-[#005fa0] bg-gradient-to-b from-[#005fa0] to-[#0070bb] pt-8 pb-14 relative flex justify-center overflow-hidden">
+          {/* Subtle Background Pattern */}
+          <div className="absolute inset-0 opacity-10 mix-blend-overlay pointer-events-none">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+                  <path d="M 32 0 L 0 0 0 32" fill="none" stroke="white" strokeWidth="1" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+            </svg>
+          </div>
+
+          <div className="relative group">
+            <div
+              className={`w-28 h-28 rounded-full border-4 ${
+                avatarError ? 'border-rose-400' : 'border-white'
+              } shadow-xl overflow-hidden bg-white flex items-center justify-center`}
+            >
+              <img
+                src={avatar}
+                alt="Profile Avatar"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  setAvatarError(true);
+                  (e.target as HTMLImageElement).src = FALLBACK_AVATAR;
+                }}
+              />
+            </div>
+            
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/*"
+              className="hidden"
+            />
+            
             <button
               type="button"
-              onClick={onBack}
-                className="w-10 h-10 -ml-1 rounded-full flex items-center justify-center text-slate-800 hover:bg-slate-100 active:scale-95 transition-all"
-              >
-                <span className="material-symbols-outlined text-[24px]">arrow_back</span>
-            </button>
-
-            {/* School / Edit Profile Title Badge */}
-            <div className="flex items-center gap-2.5">
-              {/* Blue Graduation Logo Icon */}
-              <div className="w-8 h-8 rounded-lg bg-[#005fa0] flex items-center justify-center text-white shadow-xs overflow-hidden">
-                <svg
-                  className="w-5 h-5 text-white"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M12 3L1 9L5 11.18V17.18L12 21L19 17.18V11.18L21 10.09V17H23V9L12 3ZM18.82 9L12 12.72L5.18 9L12 5.28L18.82 9ZM17 15.99L12 18.72L7 15.99V12.27L12 15L17 12.27V15.99Z" />
-                </svg>
-              </div>
-
-              <h1 className="text-[19px] font-bold text-[#0b1c30] tracking-tight font-heading">
-                Edit Profile
-              </h1>
-            </div>
-          </div>
-
-          {/* Right Header User Avatar */}
-          <div className="w-8 h-8 rounded-full ring-2 ring-[#005fa0]/25 overflow-hidden bg-slate-200 shrink-0">
-            <img
-              src={avatarError ? FALLBACK_AVATAR : avatar}
-              alt="Profil Siswa"
-              className="w-full h-full object-cover"
-              onError={() => setAvatarError(true)}
-            />
-          </div>
-        </header>
-
-        {/* Scrollable Content */}
-        <div className="flex-1 flex flex-col pb-8 overflow-y-auto">
-          {/* Top Blue Header Arc with Dot Grid */}
-          <div className="relative w-full bg-gradient-to-b from-[#005fa0] via-[#0070c0] to-[#bfe0fb] pt-6 pb-16 px-4 flex flex-col items-center overflow-hidden">
-            {/* Dot Pattern Overlay */}
-            <div className="absolute inset-0 bg-dot-pattern opacity-40 pointer-events-none" />
-
-            {/* Glowing Ambient Light */}
-            <div className="absolute top-0 w-64 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-
-            {/* Student Avatar with Camera Button */}
-            <div className="relative z-10 flex flex-col items-center">
-              <div className="relative w-28 h-28 rounded-full p-[3px] bg-white shadow-[0_10px_25px_rgba(0,40,100,0.22)] flex items-center justify-center group">
-                <img
-                  src={avatarError ? FALLBACK_AVATAR : avatar}
-                  alt={formData.fullName}
-                  className="w-full h-full rounded-full object-cover"
-                  onError={() => setAvatarError(true)}
-                />
-
-                {/* Floating Camera Button */}
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute bottom-0 right-0 w-9 h-9 rounded-full bg-[#005fa0] text-white shadow-md flex items-center justify-center hover:bg-[#004e84] active:scale-90 transition-all border-2 border-white cursor-pointer"
-                  title="Ganti Foto Profil"
-                  aria-label="Ganti Foto Profil"
-                >
-                  <span className="material-symbols-outlined text-[19px]">photo_camera</span>
-                </button>
-
-                {/* Hidden File Input */}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept="image/png, image/jpeg, image/webp"
-                  className="hidden"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Overlapping Main White Card */}
-          <div className="px-4 -mt-8 z-20 flex flex-col gap-4">
-            <form
-              onSubmit={handleSubmit}
-              className="bg-white rounded-[24px] p-5 shadow-[0_8px_30px_rgba(11,99,168,0.08)] border border-slate-100 flex flex-col gap-4.5"
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute bottom-0 right-0 w-8 h-8 bg-[#005fa0] border-2 border-white rounded-full text-white flex items-center justify-center hover:bg-[#004e84] active:scale-95 transition-all shadow-md cursor-pointer"
+              title="Ganti Foto Profil"
             >
-              {/* Section Header: Data Siswa */}
-              <div className="flex items-center gap-2 pb-0.5">
-                <span className="material-symbols-outlined text-[#005fa0] text-[22px]">
-                  badge
-                </span>
-                <h2 className="text-[18px] font-bold text-[#0b1c30] font-heading tracking-tight">
-                  Data Siswa
-                </h2>
-              </div>
+              <span className="material-symbols-outlined text-[16px]">photo_camera</span>
+            </button>
+          </div>
+        </div>
 
+        {/* Form Container */}
+        <div className="px-4 sm:px-6 -mt-6 pb-8 relative z-10">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col gap-6">
+            
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+              <span className="material-symbols-outlined text-[#005fa0]">badge</span>
+              <h2 className="font-bold text-[#0b1c30] text-[15px]">Data Siswa</h2>
+            </div>
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               {/* Field 1: Nama Lengkap */}
               <div className="flex flex-col gap-1.5">
-                <label
-                  htmlFor="fullName"
-                  className="text-[13px] font-semibold text-[#0b1c30] flex items-center gap-1"
-                >
-                  Nama Lengkap
-                  <span className="text-amber-700 font-bold">*</span>
+                <label htmlFor="fullName" className="text-[13px] font-semibold text-[#0b1c30] flex items-center gap-1">
+                  Nama Lengkap <span className="text-amber-700 font-bold">*</span>
                 </label>
                 <div className="relative flex items-center">
                   <span className="material-symbols-outlined absolute left-3.5 text-slate-400 text-[20px] pointer-events-none">
@@ -194,9 +235,7 @@ export const EditProfileScreen: React.FC<{onBack: () => void}> = ({ onBack }) =>
                     type="text"
                     required
                     value={formData.fullName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, fullName: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                     placeholder="Masukkan nama lengkap"
                     className="w-full h-12 pl-11 pr-4 bg-[#eef4fc] text-[#0b1c30] text-[14px] font-medium rounded-xl border border-transparent focus:border-[#005fa0] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#005fa0]/15 transition-all shadow-inner/5"
                   />
@@ -204,12 +243,9 @@ export const EditProfileScreen: React.FC<{onBack: () => void}> = ({ onBack }) =>
               </div>
 
               {/* Field 2: Kelas & Kompetensi Keahlian (with Academic Year) */}
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5 opacity-80 cursor-not-allowed">
                 <div className="flex items-center justify-between text-[13px]">
-                  <label
-                    htmlFor="classMajor"
-                    className="font-semibold text-[#0b1c30]"
-                  >
+                  <label htmlFor="classMajor" className="font-semibold text-[#0b1c30]">
                     Kelas & Kompetensi Keahlian
                   </label>
                   <span className="text-[11px] font-bold text-[#005fa0]">
@@ -224,15 +260,12 @@ export const EditProfileScreen: React.FC<{onBack: () => void}> = ({ onBack }) =>
                     id="classMajor"
                     name="classMajor"
                     type="text"
+                    disabled
                     value={formData.classMajor}
-                    onChange={(e) =>
-                      setFormData({ ...formData, classMajor: e.target.value })
-                    }
-                    className="w-full h-12 pl-11 pr-11 bg-[#e5eeff] text-[#0b1c30] text-[14px] font-medium rounded-xl border border-transparent focus:border-[#005fa0] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#005fa0]/15 transition-all shadow-inner/5"
+                    className="w-full h-12 pl-11 pr-11 bg-slate-100 text-slate-500 text-[14px] font-medium rounded-xl border border-transparent"
                   />
                   <span
                     className="material-symbols-outlined absolute right-3.5 text-slate-400 text-[20px] pointer-events-none"
-                    title="Terverifikasi oleh pihak sekolah"
                   >
                     verified
                   </span>
@@ -240,13 +273,9 @@ export const EditProfileScreen: React.FC<{onBack: () => void}> = ({ onBack }) =>
               </div>
 
               {/* Field 3: Email Akun Belajar / Sekolah */}
-              <div className="flex flex-col gap-1.5">
-                <label
-                  htmlFor="email"
-                  className="text-[13px] font-semibold text-[#0b1c30] flex items-center gap-1"
-                >
-                  Email Akun Belajar / Sekolah
-                  <span className="text-amber-700 font-bold">*</span>
+              <div className="flex flex-col gap-1.5 opacity-80 cursor-not-allowed">
+                <label htmlFor="email" className="text-[13px] font-semibold text-[#0b1c30] flex items-center gap-1">
+                  Username Dapodik
                 </label>
                 <div className="relative flex items-center">
                   <span className="material-symbols-outlined absolute left-3.5 text-slate-400 text-[20px] pointer-events-none">
@@ -256,25 +285,17 @@ export const EditProfileScreen: React.FC<{onBack: () => void}> = ({ onBack }) =>
                     id="email"
                     name="email"
                     type="email"
-                    required
+                    disabled
                     value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    placeholder="nama@smkn1sorong.sch.id"
-                    className="w-full h-12 pl-11 pr-4 bg-[#eef4fc] text-[#0b1c30] text-[14px] font-medium rounded-xl border border-transparent focus:border-[#005fa0] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#005fa0]/15 transition-all shadow-inner/5"
+                    className="w-full h-12 pl-11 pr-4 bg-slate-100 text-slate-500 text-[14px] font-medium rounded-xl border border-transparent"
                   />
                 </div>
               </div>
 
               {/* Field 4: Nomor WhatsApp Aktif */}
               <div className="flex flex-col gap-1.5">
-                <label
-                  htmlFor="phone"
-                  className="text-[13px] font-semibold text-[#0b1c30] flex items-center gap-1"
-                >
+                <label htmlFor="phone" className="text-[13px] font-semibold text-[#0b1c30] flex items-center gap-1">
                   Nomor WhatsApp Aktif
-                  <span className="text-amber-700 font-bold">*</span>
                 </label>
                 <div className="relative flex items-center">
                   <span className="material-symbols-outlined absolute left-3.5 text-slate-400 text-[20px] pointer-events-none">
@@ -284,12 +305,9 @@ export const EditProfileScreen: React.FC<{onBack: () => void}> = ({ onBack }) =>
                     id="phone"
                     name="phone"
                     type="tel"
-                    required
                     value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    placeholder="+62 xxx-xxxx-xxxx"
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="+62 8xx-xxxx-xxxx"
                     className="w-full h-12 pl-11 pr-4 bg-[#eef4fc] text-[#0b1c30] text-[14px] font-medium rounded-xl border border-transparent focus:border-[#005fa0] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#005fa0]/15 transition-all shadow-inner/5"
                   />
                 </div>
@@ -304,25 +322,9 @@ export const EditProfileScreen: React.FC<{onBack: () => void}> = ({ onBack }) =>
                 >
                   {isSaving ? (
                     <>
-                      <svg
-                        className="animate-spin h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
                       Menyimpan...
                     </>
@@ -346,9 +348,7 @@ export const EditProfileScreen: React.FC<{onBack: () => void}> = ({ onBack }) =>
         {/* Toast Notification Alert */}
         <div
           className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full bg-[#1e293b] text-white shadow-2xl flex items-center gap-2.5 pointer-events-none transition-all duration-300 max-w-[90%] ${
-            showToast
-              ? 'opacity-100 translate-y-0 scale-100'
-              : 'opacity-0 translate-y-4 scale-95'
+            showToast ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'
           }`}
         >
           <span className="material-symbols-outlined text-emerald-400 text-[20px]">
@@ -359,5 +359,6 @@ export const EditProfileScreen: React.FC<{onBack: () => void}> = ({ onBack }) =>
           </span>
         </div>
       </div>
+    </div>
   );
 }

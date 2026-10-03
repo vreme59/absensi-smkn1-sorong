@@ -15,6 +15,7 @@ import { LoginScreen } from './components/LoginScreen';
 import { JadwalScreen } from './components/JadwalScreen';
 import { ProfileScreen } from './components/ProfileScreenSamakan';
 import { EditProfileScreen } from './components/EditProfileScreen';
+import { ChangePasswordScreen } from './components/ChangePasswordScreen';
 import { ClassAttendanceSummary, StudentAttendance, TeacherCallAlert, UserRole } from './types_samakan';
 import { useAuth } from './hooks/useAuth';
 
@@ -62,6 +63,8 @@ export default function App() {
         ...USER_PROFILES[supabaseRole] ?? USER_PROFILES.siswa,
         id: auth.profile.id,
         name: auth.profile.nama,
+        phone: auth.profile.phone || '',
+        avatarUrl: auth.profile.avatar_url || (USER_PROFILES[supabaseRole] ?? USER_PROFILES.siswa).avatarUrl,
         role: supabaseRole,
         roleTitle:
           supabaseRole === 'guru' ? 'Guru Mata Pelajaran'
@@ -196,7 +199,7 @@ export default function App() {
   // --- Main App ---
   return (
     <div className="min-h-screen bg-surface flex flex-col justify-between font-body text-on-surface">
-      {currentTab !== 'edit-profil' && <Navbar currentTab={currentTab} user={currentUser} onSelectRole={() => {}} onOpenHtmlModal={() => {}} />}
+      {currentTab !== 'edit-profil' && currentTab !== 'ganti-password' && <Navbar currentTab={currentTab} user={currentUser} onSelectRole={() => {}} onOpenHtmlModal={() => {}} />}
 
       {isGuestPublic && (
         <div className="fixed top-16 left-0 right-0 z-30 bg-amber-500 text-amber-950 px-4 py-1.5 text-xs font-bold flex items-center justify-between shadow-sm">
@@ -273,7 +276,7 @@ export default function App() {
 
 
         {currentTab === 'edit-profil' && (
-          <EditProfileScreen onBack={() => setCurrentTab('profil')} />
+          <EditProfileScreen onBack={() => setCurrentTab('profil')} user={currentUser} onProfileUpdated={() => window.location.reload()} />
         )}
         {currentTab === 'profil' && (
           <ProfileScreen
@@ -281,11 +284,12 @@ export default function App() {
             onLogout={handleLogout}
             onShowToast={showToast}
             onEditProfile={() => setCurrentTab('edit-profil')}
+              onChangePassword={() => setCurrentTab('ganti-password')}
           />
         )}
       </main>
 
-      {currentTab !== 'edit-profil' && (
+      {currentTab !== 'edit-profil' && currentTab !== 'ganti-password' && (
         <BottomNav
           currentTab={currentTab}
           onTabChange={(tab) => setCurrentTab(tab as any)}
