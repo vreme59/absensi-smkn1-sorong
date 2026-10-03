@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SCHEDULES_BY_DAY } from "../data/samakan/scheduleData";
 import { UserProfile, StudentAttendance, ClassAttendanceSummary, TeacherCallAlert } from '../types_samakan';
 
@@ -14,7 +14,216 @@ interface HomeScreenProps {
   onShowToast: (title: string, desc: string, type?: 'success' | 'warning' | 'info') => void;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({
+
+export const HomeScreenGuru: React.FC<HomeScreenProps> = ({ user, onNavigateToTab, onShowToast }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const dbgTime = (window as any).DEBUG_TIME;
+      if (dbgTime) {
+        const [h, m] = dbgTime.split(':');
+        const d = new Date();
+        d.setHours(parseInt(h, 10), parseInt(m, 10), 0);
+        setCurrentTime(d);
+      } else {
+        setCurrentTime(new Date());
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const timeString = currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
+  const dateString = currentTime.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
+
+  return (
+    <div className="flex flex-col w-full max-w-md mx-auto pb-24 font-body bg-slate-50 min-h-screen">
+      {/* Blue Header */}
+      <div className="bg-primary pt-6 pb-12 px-5 relative overflow-hidden rounded-b-[32px] shadow-[0_12px_32px_rgba(0,95,160,0.15)]">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 -left-32 w-80 h-80 bg-sky-400/20 rounded-full blur-3xl"></div>
+
+        {/* DEBUG TIME WIDGET */}
+        <div className="relative z-20 bg-red-500/20 border border-red-400/30 backdrop-blur-sm rounded-lg p-2 mb-4 flex flex-col gap-2 text-white text-xs">
+           <span className="font-bold text-red-100 flex items-center gap-1">
+             <span className="material-symbols-outlined notranslate text-[14px]">bug_report</span> 
+             Alat Debugging (Simulator Waktu)
+           </span>
+           <div className="flex gap-2">
+             <select onChange={e => {
+               if (e.target.value === "") {
+                 (window as any).DEBUG_DAY_INDEX = undefined;
+               } else {
+                 (window as any).DEBUG_DAY_INDEX = Number(e.target.value);
+               }
+               // trigger a tiny re-render
+               const d = (window as any).DEBUG_TIME ? new Date() : new Date();
+               if ((window as any).DEBUG_TIME) {
+                 const [h, m] = (window as any).DEBUG_TIME.split(':');
+                 d.setHours(parseInt(h, 10), parseInt(m, 10), 0);
+               }
+               setCurrentTime(d);
+             }} className="bg-white/20 px-2 py-1.5 rounded text-white outline-none border border-white/20 focus:border-white flex-1 cursor-pointer">
+               <option value="" className="text-slate-900">Pilih Hari (Asli)</option>
+               <option value="0" className="text-slate-900">Senin</option>
+               <option value="1" className="text-slate-900">Selasa</option>
+               <option value="2" className="text-slate-900">Rabu</option>
+               <option value="3" className="text-slate-900">Kamis</option>
+               <option value="4" className="text-slate-900">Jumat</option>
+               <option value="5" className="text-slate-900">Sabtu</option>
+             </select>
+             
+             <input type="time" onChange={e => {
+               if (!e.target.value) {
+                 (window as any).DEBUG_TIME = null;
+                 setCurrentTime(new Date());
+               } else {
+                 (window as any).DEBUG_TIME = e.target.value;
+                 const [h,m] = e.target.value.split(':').map(Number);
+                 const d = new Date();
+                 d.setHours(h);
+                 d.setMinutes(m);
+                 setCurrentTime(d);
+               }
+             }} className="bg-white/20 px-2 py-1.5 rounded text-white outline-none border border-white/20 focus:border-white cursor-pointer" />
+           </div>
+        </div>
+
+        <div className="relative z-10 flex justify-between items-start">
+          <div className="flex gap-3 items-center">
+            <div className="w-14 h-14 rounded-full bg-white p-1 shadow-md relative">
+              <img src="https://ui-avatars.com/api/?name=Haris+T&background=0D8ABC&color=fff&size=128" alt="Profile" className="w-full h-full rounded-full object-cover" />
+              <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></div>
+            </div>
+            <div>
+              <p className="text-sky-100 text-[11px] font-semibold uppercase tracking-wider mb-0.5">Selamat Pagi 👋</p>
+              <h1 className="text-white font-headline font-bold text-xl leading-tight">{user.name || 'Pak Haris T.'}</h1>
+              <div className="mt-1 inline-flex items-center gap-1 bg-white/20 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                <span className="material-symbols-outlined notranslate text-[12px] text-white">verified</span>
+                <span className="text-white text-[10px] font-bold">Guru Produktif</span>
+              </div>
+            </div>
+          </div>
+          <button className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white relative backdrop-blur-md">
+            <span className="material-symbols-outlined notranslate text-[20px]">notifications</span>
+            <span className="absolute top-2 right-2.5 w-2 h-2 bg-orange-500 rounded-full ring-2 ring-primary"></span>
+          </button>
+        </div>
+
+        {/* Status Mengajar Hari Ini (Giant Card like Student) */}
+        <div className="relative z-10 mt-6 bg-primary-container/80 border border-white/10 rounded-[20px] p-4 shadow-inner overflow-hidden backdrop-blur-md">
+          {/* Card Deco */}
+          <svg className="absolute -right-16 -top-16 w-64 h-64 opacity-[0.08]" fill="none" viewBox="0 0 200 200">
+            <circle cx="160" cy="160" r="120" stroke="white" strokeDasharray="12 12" strokeWidth="28"></circle>
+            <path d="M40 180 C 80 120, 140 140, 200 80" fill="none" stroke="white" strokeWidth="18"></path>
+          </svg>
+
+          <div className="flex items-start justify-between relative z-10 mb-3">
+            <div>
+              <span className="font-label-sm text-[11px] text-primary-fixed flex items-center gap-1 font-bold">
+                <span className="material-symbols-outlined notranslate text-[16px]">verified</span> STATUS MENGAJAR HARI INI
+              </span>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="font-headline font-bold text-2xl tracking-tight text-white">{timeString} WIT</span>
+                <span className="px-2 py-0.5 rounded-full bg-amber-500/25 text-amber-100 font-label-sm text-[11px] font-bold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> SEDANG MENGAJAR
+                </span>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <span className="font-label-sm text-[11px] text-primary-fixed font-semibold">
+                Sisa Kelas
+              </span>
+              <div className="font-headline font-bold text-xl text-white">
+                2 Kelas
+              </div>
+            </div>
+          </div>
+
+          <div className="relative z-10 bg-white/15 hover:bg-white/20 backdrop-blur-md rounded-xl p-2.5 flex items-center justify-between cursor-pointer transition-all">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-emerald-500 to-emerald-300 flex items-center justify-center shadow-md">
+                <span className="material-symbols-outlined notranslate text-emerald-950 text-[20px]">
+                  school
+                </span>
+              </div>
+              <div>
+                <div className="flex items-center gap-1">
+                  <span className="font-label-sm text-xs text-white font-bold">
+                    Target Hari Ini: 8 JP
+                  </span>
+                </div>
+                <p className="font-body text-[11px] text-primary-fixed leading-tight">
+                  Tepat waktu membangun generasi emas.
+                </p>
+              </div>
+            </div>
+            <span className="material-symbols-outlined notranslate text-primary-fixed text-[20px]">
+              chevron_right
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5 -mt-6 relative z-20 flex flex-col gap-4">
+        {/* NEW Combined Main Card: Kelas Berlangsung */}
+        {/* NEW Combined Main Card: Kelas Berlangsung */}
+        <LiveSessionCard 
+          user={user} 
+          currentTime={currentTime} 
+          onShowToast={onShowToast} 
+          onNavigateToTab={onNavigateToTab} 
+        />
+
+        {/* Agenda & Tugas Guru */}
+        <div className="bg-white rounded-[24px] shadow-sm shadow-slate-200/50 border border-slate-100 p-5 flex justify-between items-center mb-2">
+          <div className="flex items-center gap-2 text-slate-800">
+            <span className="material-symbols-outlined notranslate text-primary">task_alt</span>
+            <span className="font-headline font-bold text-sm">Agenda & Tugas Guru</span>
+          </div>
+          <span className="text-primary text-[11px] font-bold cursor-pointer hover:underline">Lihat Semua</span>
+        </div>
+        {/* Quick Actions (4 Grid) */}
+        <div className="bg-white rounded-[24px] shadow-sm border border-slate-100 p-5 mt-2">
+          <h3 className="font-headline font-bold text-slate-800 text-sm mb-4">Menu Pintasan Guru</h3>
+          <div className="grid grid-cols-4 gap-2">
+            <button className="flex flex-col items-center gap-2 group">
+              <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform">
+                <span className="material-symbols-outlined notranslate">calendar_month</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-600 text-center leading-tight">Jadwal<br/>Mengajar</span>
+            </button>
+            <button className="flex flex-col items-center gap-2 group">
+              <div className="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform">
+                <span className="material-symbols-outlined notranslate">query_stats</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-600 text-center leading-tight">Rekap<br/>Kelas</span>
+            </button>
+            <button className="flex flex-col items-center gap-2 group">
+              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform">
+                <span className="material-symbols-outlined notranslate">mark_email_unread</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-600 text-center leading-tight">Surat<br/>Izin</span>
+            </button>
+            <button className="flex flex-col items-center gap-2 group">
+              <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform">
+                <span className="material-symbols-outlined notranslate">campaign</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-600 text-center leading-tight">Buat<br/>Pengumuman</span>
+            </button>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  );
+};
+
+
+export const HomeScreen: React.FC<HomeScreenProps> = ( {
   user,
   classSummary,
   students,
@@ -25,6 +234,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onNavigateToTab,
   onShowToast,
 }) => {
+  if (user.role === 'guru') {
+    return <HomeScreenGuru user={user} onNavigateToTab={onNavigateToTab} onShowToast={onShowToast} classSummary={classSummary} students={students} teacherAlert={teacherAlert} onSendTeacherCall={onSendTeacherCall} onSubmitMorningDraft={onSubmitMorningDraft} />;
+  }
+
   const [showAbsenModal, setShowAbsenModal] = useState(false);
   const [showIzinModal, setShowIzinModal] = useState(false);
   const [showRekapModal, setShowRekapModal] = useState(false);
@@ -47,7 +260,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const handleTriggerTeacherCall = () => {
     onSendTeacherCall();
     onShowToast(
-      'Panggilan Guru Dikirim! ðŸ””',
+      'Panggilan Guru Dikirim! 🔔',
       'Sinyal telah dikirim ke ponsel Pak Budi Santoso & Display Ruang Guru.',
       'warning'
     );
@@ -134,8 +347,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <div className="relative z-10 flex items-center justify-between mb-4">
           <div className="flex flex-col">
             <span className="font-label-sm text-[11px] text-primary-fixed uppercase tracking-wider font-bold">
-              Selamat Pagi ðŸ‘‹
-            </span>
+              Selamat Pagi 👋
+              </span>
             <h1 className="font-headline font-bold text-xl text-white tracking-tight">
               {user.name}
             </h1>
@@ -218,7 +431,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           <div
             onClick={() =>
               onShowToast(
-                'Lencana Disiplin Sorong ðŸ”¥',
+                'Lencana Disiplin Sorong 🔥',
                 `Hebat! Anda telah hadir tepat waktu ${user.streakDays} hari berturut-turut tanpa terlambat.`,
                 'success'
               )
@@ -240,7 +453,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     {user.streakDays} Hari Berturut-turut!
                   </span>
                   <span className="px-1.5 py-0.2 rounded bg-amber-400 text-amber-950 font-label-sm text-[10px] font-bold">
-                    STREAK ðŸ”¥
+                    STREAK 🔥
                   </span>
                 </div>
                 <p className="font-body text-[11px] text-primary-fixed leading-tight">
@@ -337,7 +550,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 </div>
                 <div>
                   <span className="font-label-sm text-[11px] uppercase tracking-wider text-amber-100 font-bold">
-                    Jam ke-2 â€¢ 08.45 WIT
+                    Jam ke-2 • 08.45 WIT
                   </span>
                   <h2 className="font-headline font-bold text-base leading-tight">
                     Guru Belum Tiba di Kelas?
@@ -358,7 +571,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 type="button"
               >
                 <span className="material-symbols-outlined notranslate text-[18px]">cell_tower</span>
-                Kirim Sinyal Panggil Guru ðŸ””
+                Kirim Sinyal Panggil Guru 🔔
               </button>
               <button
                 onClick={() => setShowBanner(false)}
@@ -618,7 +831,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   Informasi Absensi Kelas
                 </h2>
                 <p className="font-body text-xs text-slate-500">
-                  XII TKJ 1 â€¢ 34 Siswa Terdaftar
+                  XII TKJ 1 • 34 Siswa Terdaftar
                 </p>
               </div>
               <button
@@ -678,7 +891,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   Formulir Pengajuan Sakit / Izin
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Siswa XII TKJ 1 â€¢ Unggah surat & verifikasi wali kelas
+                  Siswa XII TKJ 1 • Unggah surat & verifikasi wali kelas
                 </p>
               </div>
               <button
@@ -779,7 +992,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   Rekap Kehadiran Bulan {new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Kelas XII TKJ 1 â€¢ Semester Genap T.A 2024/2025
+                  Kelas XII TKJ 1 • Semester Genap T.A 2024/2025
                 </p>
               </div>
               <button
@@ -838,3 +1051,187 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 export { HomeScreen as HomeScreenSamakan } from './HomeScreenSamakan';
 
 
+
+
+
+
+export const LiveSessionCard: React.FC<{ user: any, currentTime: Date, onShowToast: any, onNavigateToTab: any }> = ({ user, currentTime, onShowToast, onNavigateToTab }) => {
+  const [liveSession, setLiveSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ hadir: 0, sakit: 0, izin: 0, alfa: 0 });
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchLiveSession() {
+      try {
+        const hariNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        let currentDayIndex = currentTime.getDay();
+        if ((window as any).DEBUG_DAY_INDEX !== undefined) {
+          currentDayIndex = ((window as any).DEBUG_DAY_INDEX === 6) ? 0 : (window as any).DEBUG_DAY_INDEX + 1;
+        }
+        const hariIni = hariNames[currentDayIndex];
+        const nowMin = currentTime.getHours() * 60 + currentTime.getMinutes();
+
+        // fetch today's schedules for guru
+        const { data: schedules } = await supabase
+          .from('jadwal')
+          .select('id, jam_mulai, jam_selesai, mapel:mapel_id(nama), kelas:kelas_id(id, nama)')
+          .eq('guru_id', user.id)
+          .eq('hari', hariIni);
+
+        if (!schedules || schedules.length === 0) {
+          if (isMounted) { setLiveSession(null); setLoading(false); }
+          return;
+        }
+
+        // Group consecutive
+        const grouped: any[] = [];
+        schedules.forEach((item: any) => {
+          const lastGroup = grouped[grouped.length - 1];
+          const [sh, sm] = (item.jam_mulai || '00:00').split(':').map(Number);
+          const [eh, em] = (item.jam_selesai || '00:00').split(':').map(Number);
+          const itemDuration = (eh * 60 + em) - (sh * 60 + sm);
+
+          if (
+            lastGroup &&
+            lastGroup.kelas?.id === item.kelas?.id &&
+            lastGroup.mapel?.nama === item.mapel?.nama
+          ) {
+            lastGroup.jam_selesai = item.jam_selesai;
+            lastGroup.actualDuration = (lastGroup.actualDuration || 0) + itemDuration;
+          } else {
+            grouped.push({ ...item, actualDuration: itemDuration });
+          }
+        });
+
+        // Find live
+        let active = null;
+        for (const g of grouped) {
+          const [sh, sm] = g.jam_mulai.split(':').map(Number);
+          const startMin = sh * 60 + sm;
+          const [eh, em] = g.jam_selesai.split(':').map(Number);
+          const endMin = eh * 60 + em;
+          if (nowMin >= startMin && nowMin < endMin) {
+            active = { ...g, startMin, endMin };
+            break;
+          }
+        }
+
+        if (active) {
+          if (isMounted) setLiveSession(active);
+          
+          // fetch stats
+          const { data: absenData } = await supabase
+            .from('absen_mapel')
+            .select('status')
+            .eq('jadwal_id', active.id)
+            .eq('tanggal', currentTime.toISOString().split('T')[0]);
+            
+          if (absenData && isMounted) {
+            let h = 0, s = 0, i = 0, a = 0;
+            absenData.forEach(r => {
+              if (r.status === 'Hadir') h++;
+              else if (r.status === 'Sakit') s++;
+              else if (r.status === 'Izin') i++;
+              else if (r.status === 'Alfa') a++;
+            });
+            setStats({ hadir: h, sakit: s, izin: i, alfa: a });
+          } else if (isMounted) {
+            setStats({ hadir: 0, sakit: 0, izin: 0, alfa: 0 });
+          }
+        } else {
+          if (isMounted) setLiveSession(null);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      if (isMounted) setLoading(false);
+    }
+    fetchLiveSession();
+    return () => { isMounted = false; };
+  }, [user.id, currentTime]);
+
+  if (loading) {
+    return <div className="bg-white rounded-[24px] shadow-sm border border-slate-100 p-8 text-center"><div className="animate-pulse flex flex-col items-center"><div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mb-2"></div><div className="text-xs text-slate-400">Memuat Sesi...</div></div></div>;
+  }
+
+  if (!liveSession) {
+    return (
+      <div className="bg-white rounded-[24px] shadow-sm border border-slate-100 p-8 text-center flex flex-col items-center">
+        <span className="material-symbols-outlined notranslate text-[40px] text-slate-300 mb-2">coffee</span>
+        <h3 className="text-slate-700 font-bold text-sm">Tidak Sedang Mengajar</h3>
+        <p className="text-slate-500 text-[11px]">Waktu untuk istirahat atau mempersiapkan materi.</p>
+        <button onClick={() => onNavigateToTab('jadwal')} className="mt-4 border border-slate-200 text-slate-600 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-50">Lihat Jadwal Lengkap</button>
+      </div>
+    );
+  }
+
+  const nowMin = currentTime.getHours() * 60 + currentTime.getMinutes();
+  const elapsed = Math.max(0, nowMin - liveSession.startMin);
+  const total = liveSession.endMin - liveSession.startMin;
+  const progressPercent = Math.min(100, Math.round((elapsed / total) * 100));
+
+  const mapelNama = liveSession.mapel?.nama || 'Mata Pelajaran';
+  const kelasNama = liveSession.kelas?.nama || 'Kelas';
+
+  return (
+    <div className="bg-white rounded-[24px] shadow-lg shadow-slate-200/50 overflow-hidden flex relative animate-in fade-in zoom-in-95">
+      <div className="w-1.5 bg-emerald-500 absolute top-4 bottom-4 left-0 rounded-r-lg"></div>
+      
+      <div className="p-5 flex-1 flex flex-col pl-6">
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-emerald-500 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Sesi Sedang Berlangsung</span>
+        </div>
+
+        <div className="flex items-center gap-2 mb-2">
+          <span className="bg-sky-100 text-primary-dark font-bold text-[10px] px-2 py-0.5 rounded-md">{kelasNama}</span>
+          <span className="text-slate-500 text-[11px] font-medium">{liveSession.jam_mulai.substring(0,5)} - {liveSession.jam_selesai.substring(0,5)} WIT ({liveSession.actualDuration || total} Mnt)</span>
+        </div>
+
+        <h2 className="text-[20px] font-headline font-bold text-slate-800 leading-tight mb-4">
+          {mapelNama}
+        </h2>
+
+        <div className="flex flex-col gap-1.5 mb-5">
+          <div className="flex justify-between items-center text-[11px]">
+            <span className="text-slate-700 font-bold">Progres Waktu Mengajar</span>
+            <span className="text-primary font-bold">{elapsed} / {total} Menit ({progressPercent}%)</span>
+          </div>
+          <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+            <div className="bg-primary h-full rounded-full transition-all duration-1000" style={{ width: progressPercent + '%' }}></div>
+          </div>
+        </div>
+
+        <div className="bg-slate-50/80 border border-slate-100 rounded-xl p-3 mb-4 flex divide-x divide-slate-200">
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <span className="text-emerald-500 font-bold text-lg leading-none mb-1">{stats.hadir}</span>
+            <span className="text-slate-500 text-[9px] font-bold uppercase tracking-wider">Hadir</span>
+          </div>
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <span className="text-amber-500 font-bold text-lg leading-none mb-1">{stats.sakit}</span>
+            <span className="text-slate-500 text-[9px] font-bold uppercase tracking-wider">Sakit</span>
+          </div>
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <span className="text-primary font-bold text-lg leading-none mb-1">{stats.izin}</span>
+            <span className="text-slate-500 text-[9px] font-bold uppercase tracking-wider">Izin</span>
+          </div>
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <span className="text-slate-700 font-bold text-lg leading-none mb-1">{stats.alfa}</span>
+            <span className="text-slate-500 text-[9px] font-bold uppercase tracking-wider">Alfa</span>
+          </div>
+        </div>
+
+        <button 
+          onClick={() => {
+            onShowToast('Mengarahkan', 'Buka tab Jadwal untuk mengubah absensi', 'info');
+            onNavigateToTab('jadwal');
+          }}
+          className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-[14px] shadow-lg shadow-primary/30 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
+        >
+          <span className="material-symbols-outlined notranslate text-[18px]">how_to_reg</span>
+          Kelola Absen Kelas Ini
+        </button>
+      </div>
+    </div>
+  );
+};

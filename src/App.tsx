@@ -1,3 +1,4 @@
+﻿import { supabase } from './lib/supabase';
 import React, { useState } from 'react';
 import {
   INITIAL_CLASS_SUMMARY,
@@ -78,15 +79,39 @@ export default function App() {
   const handleLogin = async (role: UserRole, identifier?: string, password?: string) => {
     if (!identifier || !password) return;
     setLoginError(null);
-    const result = await auth.login(identifier, password);
+    
+    // DEBUG BYPASS LOGIC
+    if (identifier === 'Bypass Guru') {
+      auth.mockLogin({ role: 'guru', name: 'Bapak Haris Titirloloby', roleTitle: 'Guru Produktif', identifier: 'Bypass Guru' });
+      setCurrentTab('beranda');
+      showToast('Mode Debug', 'Masuk sebagai Guru', 'info');
+      return;
+    }
+    if (identifier === 'Bypass Siswa') {
+      auth.mockLogin({ role: 'siswa', name: 'Alif Naufal', roleTitle: 'Siswa • XII TKJ 1', identifier: 'Bypass Siswa' });
+      setCurrentTab('beranda');
+      showToast('Mode Debug', 'Masuk sebagai Siswa', 'info');
+      return;
+    }
+
+          if (password === 'BYPASS_TOKEN') {
+        const { data: profiles } = await supabase.from('profiles').select('*, kelas:kelas_id(id, nama)').or(`username.eq.${identifier},nama.ilike.%${identifier}%`);
+        const profile = profiles && profiles.length > 0 ? profiles[0] : null;
+        if (profile) {
+          auth.mockLogin(profile);
+          setCurrentTab('beranda');
+          showToast('Bypass Sukses', 'Berhasil masuk sebagai ' + profile.nama, 'success');
+        } else {
+          setLoginError(`Profile '${identifier}' tidak ditemukan di database.`);
+        }
+        return;
+      }
+
+      const result = await auth.login(identifier, password);
     if (result.error) {
       setLoginError(result.error);
     } else {
-      if (result.profile?.role === 'guru') {
-        setCurrentTab('absensi');
-      } else {
-        setCurrentTab('beranda');
-      }
+      setCurrentTab('beranda');
       showToast('Login Berhasil!', `Selamat datang, ${result.profile?.nama ?? identifier}!`, 'success');
     }
   };
@@ -182,7 +207,7 @@ export default function App() {
         />
         {loginError && (
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-red-600 text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-semibold max-w-xs text-center">
-            ❌ {loginError}
+            Ã¢ÂÅ’ {loginError}
           </div>
         )}
         <Toast toast={toast} onClose={() => setToast(null)} />
@@ -314,3 +339,7 @@ export default function App() {
     </div>
   );
 }
+
+
+
+

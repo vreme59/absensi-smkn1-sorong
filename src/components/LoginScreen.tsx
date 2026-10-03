@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { SCHOOL_LOGO } from '../data/mockData';
 import { UserRole } from '../types';
 
@@ -131,13 +131,56 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           <span className="material-symbols-outlined notranslate text-[18px]">calendar_month</span>
           <span>Lihat Jadwal Publik Tanpa Login</span>
         </button>
+
+        <div className="mt-6 flex flex-col gap-2 w-full animate-in slide-in-from-bottom-8 duration-700 delay-500 bg-black/20 p-4 rounded-2xl border border-white/10 backdrop-blur-md">
+          <h3 className="text-white/90 text-[11px] font-bold text-center mb-1 flex justify-center items-center gap-1">
+            <span className="material-symbols-outlined notranslate text-[14px]">engineering</span>
+            Mode Developer (Bypass)
+          </h3>
+          <p className="text-white/60 text-[9px] text-center mb-2">Pilih menu di bawah ini untuk bypass tanpa password.</p>
+          
+          <button
+            type="button"
+            onClick={() => {
+              const username = window.prompt("Masukkan Username/Nama Guru (Cth: Haris):");
+              if (username) {
+                onLoginSuccess("guru", username, "BYPASS_TOKEN");
+              }
+            }}
+            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5"
+          >
+            <span className="material-symbols-outlined notranslate text-[16px]">lock_open</span>
+            Bypass Guru DB Asli
+          </button>
+
+          <div className="grid grid-cols-2 gap-2 mt-1">
+            <button
+              type="button"
+              onClick={() => onLoginSuccess("guru", "Bypass Guru", "12345")}
+              className="w-full py-2 bg-slate-800/80 hover:bg-slate-900 text-white font-bold text-[10px] rounded-lg transition-all shadow-md active:scale-95 flex items-center justify-center gap-1"
+            >
+              <span className="material-symbols-outlined notranslate text-[12px]">bug_report</span>
+              Mock Guru (Dummy)
+            </button>
+            <button
+              type="button"
+              onClick={() => onLoginSuccess("siswa", "Bypass Siswa", "12345")}
+              className="w-full py-2 bg-slate-500/80 hover:bg-slate-600 text-white font-bold text-[10px] rounded-lg transition-all shadow-md active:scale-95 flex items-center justify-center gap-1"
+            >
+              <span className="material-symbols-outlined notranslate text-[12px]">bug_report</span>
+              Mock Siswa (Dummy)
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="pb-8 text-center z-10 animate-in fade-in duration-1000 delay-500">
         <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
-          SIAKAD v2.0 • SMK Negeri 1 Sorong
+          SIAKAD v2.0 â€¢ SMK Negeri 1 Sorong
         </p>
       </div>
     </div>
   );
 };
+
+
