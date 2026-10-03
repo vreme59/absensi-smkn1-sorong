@@ -22,8 +22,7 @@ export const EditProfileScreen: React.FC<{onBack: () => void}> = ({ onBack }) =>
   const [isSaving, setIsSaving] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('Profil siswa berhasil diperbarui!');
-  const [viewMode, setViewMode] = useState<'mobile' | 'responsive'>('mobile');
-
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Handle avatar file selection
@@ -73,60 +72,8 @@ export const EditProfileScreen: React.FC<{onBack: () => void}> = ({ onBack }) =>
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff] sm:bg-slate-200/80 flex flex-col items-center justify-start sm:p-4 md:py-6 selection:bg-[#005fa0] selection:text-white">
-      {/* Top Device Viewport Controls for Desktop Testing */}
-      <div className="hidden sm:flex items-center justify-between w-full max-w-[420px] mb-3 px-2 text-xs text-slate-600 font-medium">
-        <span className="flex items-center gap-1.5 font-semibold text-slate-700">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          SMKN 1 Sorong - Student Hub
-        </span>
-        <div className="flex items-center gap-1 bg-white/90 p-0.5 rounded-lg border border-slate-300/80 shadow-xs">
-          <button
-            type="button"
-            onClick={() => setViewMode('mobile')}
-            className={`px-2 py-1 rounded-md transition-all flex items-center gap-1 cursor-pointer ${
-              viewMode === 'mobile'
-                ? 'bg-[#005fa0] text-white shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[14px]">smartphone</span>
-            Tampilan HP
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('responsive')}
-            className={`px-2 py-1 rounded-md transition-all flex items-center gap-1 cursor-pointer ${
-              viewMode === 'responsive'
-                ? 'bg-[#005fa0] text-white shadow-xs font-semibold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[14px]">fullscreen</span>
-            Responsif
-          </button>
-        </div>
-      </div>
-
-      {/* Main Container Card (Phone Frame or Fluid) */}
-      <div
-        className={`w-full bg-[#f8f9ff] flex flex-col transition-all duration-300 relative ${
-          viewMode === 'mobile'
-            ? 'max-w-full sm:max-w-[412px] min-h-screen sm:min-h-[840px] sm:rounded-[36px] sm:shadow-2xl sm:border-[8px] sm:border-slate-900 sm:ring-1 sm:ring-black/10 overflow-hidden'
-            : 'max-w-md min-h-screen sm:min-h-[820px] sm:rounded-3xl sm:shadow-xl sm:border sm:border-slate-200 overflow-hidden'
-        }`}
-      >
-        {/* Mobile Status Bar Simulation - only on desktop frame */}
-        <div className="hidden sm:flex w-full bg-white px-6 pt-2 pb-1 items-center justify-between text-[11px] font-semibold text-slate-800 select-none">
-          <span>09:41</span>
-          <div className="flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[13px]">signal_cellular_4_bar</span>
-            <span className="material-symbols-outlined text-[13px]">wifi</span>
-            <span className="material-symbols-outlined text-[15px]">battery_full</span>
-          </div>
-        </div>
-
-        {/* Navigation Bar */}
+    <div className="w-full min-h-screen bg-slate-50 flex flex-col relative pb-20 selection:bg-[#005fa0] selection:text-white">
+      {/* Navigation Bar */}
         <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 py-3 flex items-center justify-between border-b border-slate-100 shadow-[0_1px_4px_rgba(0,0,0,0.03)]">
           <div className="flex items-center gap-2">
             {/* Back Button */}
@@ -412,6 +359,5 @@ export const EditProfileScreen: React.FC<{onBack: () => void}> = ({ onBack }) =>
           </span>
         </div>
       </div>
-    </div>
   );
 }
