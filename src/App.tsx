@@ -278,8 +278,9 @@ export default function App() {
         {currentTab === 'profil' && (
           <ProfileScreen
             user={currentUser}
-                        onLogout={handleLogout}
-                        onShowToast={showToast}
+            onLogout={handleLogout}
+            onShowToast={showToast}
+            onEditProfile={() => setCurrentTab('edit-profil')}
           />
         )}
       </main>
