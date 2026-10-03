@@ -1,4 +1,4 @@
-﻿import { supabase } from './lib/supabase';
+import { supabase } from './lib/supabase';
 import React, { useState } from 'react';
 import {
   INITIAL_CLASS_SUMMARY,
@@ -217,7 +217,7 @@ export default function App() {
 
   // --- Main App ---
   return (
-    <div className="min-h-screen bg-surface flex flex-col justify-between font-body text-on-surface">
+    <div className="min-h-screen w-full overflow-x-hidden bg-surface flex flex-col justify-between font-body text-on-surface">
       {currentTab !== 'edit-profil' && currentTab !== 'ganti-password' && <Navbar currentTab={currentTab} user={currentUser} onSelectRole={() => {}} onOpenHtmlModal={() => {}} />}
 
       {isGuestPublic && (
