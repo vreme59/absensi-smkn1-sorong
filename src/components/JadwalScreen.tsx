@@ -285,7 +285,7 @@ export const AbsensiModal: React.FC<AbsensiModalProps> = ({ isOpen, onClose, jad
 // ============================================================
 // JADWAL GURU VIEW (DB CONNECTED)
 // ============================================================
-const JadwalGuruView: React.FC<{ user: UserProfile; onShowToast: any }> = ({ user, onShowToast }) => {
+const JadwalGuruView: React.FC<{ user: UserProfile; onShowToast: any; onNavigateToTab?: any }> = ({ user, onShowToast, onNavigateToTab }) => {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
@@ -314,7 +314,6 @@ const JadwalGuruView: React.FC<{ user: UserProfile; onShowToast: any }> = ({ use
   const [dbSchedules, setDbSchedules] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
-  const [selectedJadwal, setSelectedJadwal] = useState<any | null>(null);
 
   useEffect(() => {
     const fetchSchedules = async () => {
@@ -462,7 +461,7 @@ const JadwalGuruView: React.FC<{ user: UserProfile; onShowToast: any }> = ({ use
                 return (
                   <div
                     key={item.id || idx}
-                    onClick={() => setSelectedJadwal(item)}
+                    onClick={() => onNavigateToTab?.('absensi')}
                     className={`bg-white rounded-[20px] border shadow-sm flex overflow-hidden cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${
                       isLive
                         ? 'border-primary ring-2 ring-primary/20 shadow-primary/10'
@@ -528,25 +527,22 @@ const JadwalGuruView: React.FC<{ user: UserProfile; onShowToast: any }> = ({ use
           </div>
         </div>
       </div>
-
-      {/* Absensi Modal */}
-      <AbsensiModal
-        isOpen={!!selectedJadwal}
-        onClose={() => setSelectedJadwal(null)}
-        jadwalItem={selectedJadwal}
-        guruId={user.id}
-        onShowToast={onShowToast}
-      />
     </>
   );
 };
 
 
+export interface JadwalScreenProps {
+  onShowToast: (title: string, desc: string, type?: 'success' | 'warning' | 'info') => void;
+  user?: UserProfile;
+  onNavigateToTab?: (tab: string) => void;
+}
+
 // ============================================================
 // MAIN EXPORT - JADWAL SCREEN
 // ============================================================
-export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast, user }) => {
-  if (user?.role === 'guru') return <JadwalGuruView user={user} onShowToast={onShowToast} />;
+export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast, user, onNavigateToTab }) => {
+  if (user?.role === 'guru') return <JadwalGuruView user={user} onShowToast={onShowToast} onNavigateToTab={onNavigateToTab} />;
 
   const [selectedDay, setSelectedDay] = useState('selasa');
   const [searchQuery, setSearchQuery] = useState('');
