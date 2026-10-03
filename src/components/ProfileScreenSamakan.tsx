@@ -54,25 +54,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
       {/* Profile Body Content */}
       <div className="px-4 -mt-4 relative z-20 flex flex-col gap-4">
-        {/* Dapodik Sync Status Badge */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
-              <span className="material-symbols-outlined notranslate text-[24px]">verified</span>
-            </div>
-            <div>
-              <span className="text-xs font-bold text-slate-900 block">
-                Tervalidasi Dapodik Kemendikbudristek
-              </span>
-              <span className="text-[11px] text-slate-500">
-                Sinkronisasi Terakhir: Hari ini • 06:00 WIT
-              </span>
-            </div>
-          </div>
-          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-            AKTIF
-          </span>
-        </div>
+        
 
         
 
