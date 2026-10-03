@@ -50,6 +50,13 @@ export const ChangePasswordScreen: React.FC<{
     }
   };
 
+  const toastClasses = [
+    'fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full',
+    toastType === 'success' ? 'bg-[#1e293b]' : 'bg-rose-600',
+    'text-white shadow-2xl flex items-center gap-2.5 pointer-events-none transition-all duration-300 max-w-[90%]',
+    showToast ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95',
+  ].join(' ');
+
   return (
     <div className="w-full max-w-md mx-auto min-h-screen bg-slate-50 flex flex-col relative pb-20 selection:bg-[#005fa0] selection:text-white shadow-xl sm:border-x sm:border-slate-200">
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 py-3 flex items-center border-b border-slate-100 shadow-sm gap-2">
@@ -57,7 +64,7 @@ export const ChangePasswordScreen: React.FC<{
           <span className="material-symbols-outlined text-[24px]">arrow_back</span>
         </button>
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-[#005fa0] text-white flex items-center justify-center">
             <span className="material-symbols-outlined text-[18px]">key</span>
           </div>
           <h1 className="font-bold text-[#0b1c30] text-[15px] tracking-tight">Ubah Kata Sandi</h1>
@@ -102,7 +109,7 @@ export const ChangePasswordScreen: React.FC<{
               <button
                 type="submit"
                 disabled={isSaving}
-                className="w-full h-12 bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white rounded-xl text-[14px] font-semibold tracking-wide shadow-md shadow-amber-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-75"
+                className="w-full h-12 bg-[#005fa0] hover:bg-[#004e84] active:scale-[0.99] text-white rounded-xl text-[14px] font-semibold tracking-wide shadow-md shadow-[#005fa0]/25 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-75"
               >
                 {isSaving ? 'Menyimpan...' : 'Simpan Kata Sandi'}
               </button>
@@ -111,7 +118,7 @@ export const ChangePasswordScreen: React.FC<{
         </div>
       </div>
 
-      <div className={\`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full \${toastType === 'success' ? 'bg-[#1e293b]' : 'bg-rose-600'} text-white shadow-2xl flex items-center gap-2.5 pointer-events-none transition-all duration-300 max-w-[90%] \${showToast ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'}\`}>
+      <div className={toastClasses}>
         <span className="material-symbols-outlined text-white text-[20px]">
           {toastType === 'success' ? 'check_circle' : 'error'}
         </span>

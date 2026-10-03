@@ -7,7 +7,7 @@ interface Props {
   readOnly?: boolean;
   students: Student[];
   onUpdateStudentStatus: (studentId: string, status: AttendanceStatus) => void;
-  onMarkAllPresent: () => void;
+
   onOpenSubmitModal: () => void;
   onSaveOfflineDraft: () => void;
   onViewAttachment: (student: Student) => void;
@@ -21,7 +21,7 @@ export const AttendanceScreen: React.FC<Props> = ({
   readOnly = false,
   students,
   onUpdateStudentStatus,
-  onMarkAllPresent,
+
   onOpenSubmitModal,
   onSaveOfflineDraft,
   onViewAttachment,
@@ -80,19 +80,8 @@ export const AttendanceScreen: React.FC<Props> = ({
       <div className="bg-[#005fa0] text-white px-4 pt-3 pb-5 flex flex-col gap-2 shadow-[0_8px_20px_rgba(0,95,160,0.12)]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <button
-              onClick={onNavigateHome}
-              aria-label="Kembali ke Dashboard"
-              className="w-10 h-10 rounded-full bg-[#0078c8]/40 flex items-center justify-center text-white active:scale-95 transition-transform hover:bg-[#0078c8]/60 cursor-pointer"
-              type="button"
-            >
-              <span className="material-symbols-outlined notranslate text-[20px]">arrow_back</span>
-            </button>
             <div>
               <span className="font-heading text-lg font-bold text-white leading-tight block">
-                Input Absen
-              </span>
-              <span className="text-[11px] font-medium text-[#d1e4ff]">
                 Input Absen
               </span>
             </div>
@@ -126,15 +115,6 @@ export const AttendanceScreen: React.FC<Props> = ({
               <span className="material-symbols-outlined notranslate text-[18px] text-[#005fa0]">analytics</span>
               <span className="text-sm font-bold text-[#0b1c30]">Rekap Data Real-Time</span>
             </div>
-            <button
-              onClick={onMarkAllPresent}
-              className="flex items-center gap-1 text-[#005fa0] bg-[#eff4ff] hover:bg-[#dce9ff] px-2.5 py-1 rounded-full text-xs font-bold transition-all active:scale-95 cursor-pointer"
-              id="btn-tandai-semua"
-              type="button"
-            >
-              <span className="material-symbols-outlined notranslate text-[14px]">auto_fix_high</span>
-              <span>Tandai Semua H</span>
-            </button>
           </div>
 
           {/* 5-Column Counters */}

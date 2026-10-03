@@ -29,7 +29,7 @@ export default function App() {
 
   // --- UI State ---
   const [isGuestPublic, setIsGuestPublic] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'beranda' | 'jadwal' | 'absensi' | 'profil' | 'edit-profil'>('beranda');
+  const [currentTab, setCurrentTab] = useState<'beranda' | 'jadwal' | 'absensi' | 'profil' | 'edit-profil' | 'ganti-password'>('beranda');
   const [toast, setToast] = useState<ToastData | null>(null);
   
   // Samakan state
@@ -127,12 +127,6 @@ export default function App() {
     setIsDraftSavedOffline(false);
   };
 
-  const handleMarkAllPresent = () => {
-    setPreviousOldStudentsState([...oldStudents]);
-    setOldStudents((prev) => prev.map((s) => ({ ...s, status: 'H' as AttendanceStatus })));
-    setIsDraftSavedOffline(false);
-    showToast('Berhasil', 'Semua siswa telah ditandai Hadir (H)!', 'success');
-  };
 
   const handleSaveOfflineDraft = () => {
     localStorage.setItem('smkn1_attendance_students_v2', JSON.stringify(oldStudents));
@@ -234,7 +228,7 @@ export default function App() {
                   readOnly={true}
                   students={oldStudents}
                   onUpdateStudentStatus={handleUpdateStudentStatus}
-                  onMarkAllPresent={handleMarkAllPresent}
+
                   onOpenSubmitModal={() => setIsSubmitModalOpen(true)}
                   onSaveOfflineDraft={handleSaveOfflineDraft}
                   onViewAttachment={(student) => {
@@ -255,7 +249,7 @@ export default function App() {
               <AttendanceScreen
                 students={oldStudents}
                 onUpdateStudentStatus={handleUpdateStudentStatus}
-                onMarkAllPresent={handleMarkAllPresent}
+
                 onOpenSubmitModal={() => setIsSubmitModalOpen(true)}
                 onSaveOfflineDraft={handleSaveOfflineDraft}
                 onViewAttachment={(student) => {
@@ -286,6 +280,9 @@ export default function App() {
             onEditProfile={() => setCurrentTab('edit-profil')}
               onChangePassword={() => setCurrentTab('ganti-password')}
           />
+        )}
+        {currentTab === 'ganti-password' && (
+          <ChangePasswordScreen onBack={() => setCurrentTab('profil')} />
         )}
       </main>
 

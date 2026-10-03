@@ -139,35 +139,37 @@ export const StudentCard: React.FC<Props> = ({
       </div>
 
       {/* 5-Button Status Switcher: [H] [S] [I] [B] [A] */}
-      <div className="grid grid-cols-5 gap-1.5 bg-[#eff4ff] p-1 rounded-xl">
-        {(['H', 'S', 'I', 'B', 'A'] as AttendanceStatus[]).map((val) => {
-          const isSelected = student.status === val;
+      {!readOnly && (
+        <div className="grid grid-cols-5 gap-1.5 bg-[#eff4ff] p-1 rounded-xl">
+          {(['H', 'S', 'I', 'B', 'A'] as AttendanceStatus[]).map((val) => {
+            const isSelected = student.status === val;
 
-          let selectedStyle = 'bg-[#005fa0] text-white shadow-sm font-bold';
-          if (val === 'S') selectedStyle = 'bg-[#bb5800] text-white shadow-sm font-bold';
-          if (val === 'I') selectedStyle = 'bg-[#0461a6] text-white shadow-sm font-bold';
-          if (val === 'B') selectedStyle = 'bg-red-600 text-white shadow-sm font-bold';
-          if (val === 'A') selectedStyle = 'bg-[#ba1a1a] text-white shadow-sm font-bold';
+            let selectedStyle = 'bg-[#005fa0] text-white shadow-sm font-bold';
+            if (val === 'S') selectedStyle = 'bg-[#bb5800] text-white shadow-sm font-bold';
+            if (val === 'I') selectedStyle = 'bg-[#0461a6] text-white shadow-sm font-bold';
+            if (val === 'B') selectedStyle = 'bg-red-600 text-white shadow-sm font-bold';
+            if (val === 'A') selectedStyle = 'bg-[#ba1a1a] text-white shadow-sm font-bold';
 
-          return (
-            <button
-              key={val}
-              type="button"
-              disabled={readOnly}
-                    onClick={() => onStatusChange(val)}
-              className={`h-9 rounded-lg text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
-                isSelected
-                  ? selectedStyle
-                  : val === 'B'
-                  ? 'text-red-600 hover:bg-[#e0ecff]'
-                  : 'text-[#404752] hover:bg-[#e0ecff]'
-              }`}
-            >
-              {val}
-            </button>
-          );
-        })}
-      </div>
+            return (
+              <button
+                key={val}
+                type="button"
+                disabled={readOnly}
+                onClick={() => onStatusChange(val)}
+                className={`h-9 rounded-lg text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
+                  isSelected
+                    ? selectedStyle
+                    : val === 'B'
+                    ? 'text-red-600 hover:bg-[#e0ecff]'
+                    : 'text-[#404752] hover:bg-[#e0ecff]'
+                }`}
+              >
+                {val}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Case 1: Doctor note attachment strip (Ahmad Dani) */}
       {student.id === '02' && student.attachment && (

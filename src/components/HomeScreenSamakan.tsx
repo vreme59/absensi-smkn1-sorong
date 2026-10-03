@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { SCHEDULES_BY_DAY } from "../data/samakan/scheduleData";
 import { UserProfile, StudentAttendance, ClassAttendanceSummary, TeacherCallAlert } from '../types_samakan';
 
@@ -33,7 +33,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
   const [currentTime, setCurrentTime] = useState(new Date());
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    const timer = setInterval(() => setCurrentTime((window as any).DEBUG_TIME || new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
   const timeString = currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
@@ -47,7 +47,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const handleTriggerTeacherCall = () => {
     onSendTeacherCall();
     onShowToast(
-      'Panggilan Guru Dikirim! 🔔',
+      'Panggilan Guru Dikirim! ðŸ””',
       'Sinyal telah dikirim ke ponsel Pak Budi Santoso & Display Ruang Guru.',
       'warning'
     );
@@ -87,6 +87,45 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     <div className="flex flex-col w-full max-w-md mx-auto pb-24">
       {/* DANA Style Top Surface Background Extension */}
       <div className="bg-primary pt-3 pb-10 px-4 relative overflow-hidden rounded-b-[28px] shadow-[0_12px_32px_rgba(0,95,160,0.18)]">
+                {/* DEBUG TIME WIDGET */}
+        <div className="relative z-20 bg-red-500/20 border border-red-400/30 backdrop-blur-sm rounded-lg p-2 mb-3 flex flex-col gap-2 text-white text-xs">
+           <span className="font-bold text-red-100 flex items-center gap-1">
+             <span className="material-symbols-outlined notranslate text-[14px]">bug_report</span> 
+             Alat Debugging (Simulator Waktu)
+           </span>
+           <div className="flex gap-2">
+             <select onChange={e => {
+               if (e.target.value === "") {
+                 (window as any).DEBUG_DAY_INDEX = undefined;
+               } else {
+                 (window as any).DEBUG_DAY_INDEX = Number(e.target.value);
+               }
+               // trigger a tiny re-render
+               setCurrentTime(new Date((window as any).DEBUG_TIME || new Date()));
+             }} className="bg-white/20 px-2 py-1.5 rounded text-white outline-none border border-white/20 focus:border-white flex-1 cursor-pointer">
+               <option value="" className="text-slate-900">Pilih Hari (Asli)</option>
+               <option value="0" className="text-slate-900">Senin</option>
+               <option value="1" className="text-slate-900">Selasa</option>
+               <option value="2" className="text-slate-900">Rabu</option>
+               <option value="3" className="text-slate-900">Kamis</option>
+               <option value="4" className="text-slate-900">Jumat</option>
+               <option value="5" className="text-slate-900">Sabtu</option>
+             </select>
+             
+             <input type="time" onChange={e => {
+               if (!e.target.value) {
+                 (window as any).DEBUG_TIME = null;
+               } else {
+                 const [h,m] = e.target.value.split(':').map(Number);
+                 const d = new Date();
+                 d.setHours(h);
+                 d.setMinutes(m);
+                 (window as any).DEBUG_TIME = d;
+                 setCurrentTime(d);
+               }
+             }} className="bg-white/20 px-2 py-1.5 rounded text-white outline-none border border-white/20 focus:border-white flex-1" />
+           </div>
+        </div>
         {/* Fluid Curved Accent Elements */}
         <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
         <div className="absolute -left-16 bottom-0 w-40 h-40 rounded-full bg-secondary-fixed/15 blur-lg pointer-events-none"></div>
@@ -95,7 +134,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <div className="relative z-10 flex items-center justify-between mb-4">
           <div className="flex flex-col">
             <span className="font-label-sm text-[11px] text-primary-fixed uppercase tracking-wider font-bold">
-              Selamat Pagi 👋
+              Selamat Pagi ðŸ‘‹
             </span>
             <h1 className="font-headline font-bold text-xl text-white tracking-tight">
               {user.name}
@@ -179,7 +218,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           <div
             onClick={() =>
               onShowToast(
-                'Lencana Disiplin Sorong 🔥',
+                'Lencana Disiplin Sorong ðŸ”¥',
                 `Hebat! Anda telah hadir tepat waktu ${user.streakDays} hari berturut-turut tanpa terlambat.`,
                 'success'
               )
@@ -201,7 +240,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     {user.streakDays} Hari Berturut-turut!
                   </span>
                   <span className="px-1.5 py-0.2 rounded bg-amber-400 text-amber-950 font-label-sm text-[10px] font-bold">
-                    STREAK 🔥
+                    STREAK ðŸ”¥
                   </span>
                 </div>
                 <p className="font-body text-[11px] text-primary-fixed leading-tight">
@@ -298,7 +337,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 </div>
                 <div>
                   <span className="font-label-sm text-[11px] uppercase tracking-wider text-amber-100 font-bold">
-                    Jam ke-2 • 08.45 WIT
+                    Jam ke-2 â€¢ 08.45 WIT
                   </span>
                   <h2 className="font-headline font-bold text-base leading-tight">
                     Guru Belum Tiba di Kelas?
@@ -319,7 +358,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 type="button"
               >
                 <span className="material-symbols-outlined notranslate text-[18px]">cell_tower</span>
-                Kirim Sinyal Panggil Guru 🔔
+                Kirim Sinyal Panggil Guru ðŸ””
               </button>
               <button
                 onClick={() => setShowBanner(false)}
@@ -579,7 +618,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   Informasi Absensi Kelas
                 </h2>
                 <p className="font-body text-xs text-slate-500">
-                  XII TKJ 1 • 34 Siswa Terdaftar
+                  XII TKJ 1 â€¢ 34 Siswa Terdaftar
                 </p>
               </div>
               <button
@@ -639,7 +678,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   Formulir Pengajuan Sakit / Izin
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Siswa XII TKJ 1 • Unggah surat & verifikasi wali kelas
+                  Siswa XII TKJ 1 â€¢ Unggah surat & verifikasi wali kelas
                 </p>
               </div>
               <button
@@ -740,7 +779,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   Rekap Kehadiran Bulan {new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Kelas XII TKJ 1 • Semester Genap T.A 2024/2025
+                  Kelas XII TKJ 1 â€¢ Semester Genap T.A 2024/2025
                 </p>
               </div>
               <button
@@ -797,3 +836,5 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 };
 
 export { HomeScreen as HomeScreenSamakan } from './HomeScreenSamakan';
+
+
