@@ -314,6 +314,7 @@ const JadwalGuruView: React.FC<{ user: UserProfile; onShowToast: any; onNavigate
   const [dbSchedules, setDbSchedules] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
+  const [selectedJadwal, setSelectedJadwal] = useState<any>(null);
 
   useEffect(() => {
     const fetchSchedules = async () => {
@@ -527,6 +528,8 @@ const JadwalGuruView: React.FC<{ user: UserProfile; onShowToast: any; onNavigate
           </div>
         </div>
       </div>
+    
+      <AbsensiModal isOpen={!!selectedJadwal} onClose={() => setSelectedJadwal(null)} jadwalItem={selectedJadwal} guruId={user?.id} onShowToast={onShowToast} />
     </>
   );
 };
@@ -544,17 +547,8 @@ export interface JadwalScreenProps {
 export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast, user, onNavigateToTab }) => {
   if (user?.role === 'guru') return <JadwalGuruView user={user} onShowToast={onShowToast} onNavigateToTab={onNavigateToTab} />;
 
-  const [selectedDay, setSelectedDay] = useState('selasa');
+  const [selectedDay, setSelectedDay] = useState('senin');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedClass, setSelectedClass] = useState('XII TKJ 1');
-  const [showClassPicker, setShowClassPicker] = useState(false);
-
-  const availableClasses = [
-    { id: 'XII TKJ 1', name: 'XII TKJ 1 (Teknik Komputer Jaringan 1)' },
-    { id: 'XI RPL 2', name: 'XI RPL 2 (Rekayasa Perangkat Lunak 2)' },
-    { id: 'XI TKJ 1', name: 'XI TKJ 1 (Teknik Komputer Jaringan 1)' },
-    { id: 'XII RPL 1', name: 'XII RPL 1 (Rekayasa Perangkat Lunak)' },
-  ];
 
   const currentSchedules = (SCHEDULES_BY_DAY[selectedDay] || []).filter((item: any) => {
     if (!searchQuery) return true;
@@ -565,10 +559,6 @@ export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast, user, o
       (item.room && item.room.toLowerCase().includes(query))
     );
   });
-
-  const handleExportExcel = () => {
-    onShowToast('Export', 'Fitur export akan tersedia segera', 'info');
-  };
 
   return (
     <div className="flex flex-col w-full max-w-md mx-auto pb-28 min-h-screen bg-slate-50 font-body">
@@ -584,33 +574,14 @@ export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast, user, o
           </div>
         </div>
 
-        {/* Class Selector */}
-        <button
-          onClick={() => setShowClassPicker(!showClassPicker)}
-          className="bg-white/15 w-full py-2.5 rounded-xl text-white text-sm font-semibold backdrop-blur-sm flex items-center justify-between px-4"
-        >
+        {/* Fixed Class Display for Siswa (No dropdown) */}
+        <div className="bg-white/15 w-full py-2.5 rounded-xl text-white text-sm font-semibold backdrop-blur-sm flex items-center justify-between px-4">
           <span className="flex items-center gap-2">
             <span className="material-symbols-outlined notranslate text-[18px]">school</span>
-            {selectedClass}
+            {(user as any)?.kelas?.nama || 'XII TKJ 1'}
           </span>
-          <span className="material-symbols-outlined notranslate text-[18px]">expand_more</span>
-        </button>
-
-        {showClassPicker && (
-          <div className="mt-2 bg-white rounded-xl shadow-lg overflow-hidden">
-            {availableClasses.map(cls => (
-              <button
-                key={cls.id}
-                onClick={() => { setSelectedClass(cls.id); setShowClassPicker(false); }}
-                className={`w-full px-4 py-3 text-left text-sm border-b border-slate-100 transition-colors ${
-                  selectedClass === cls.id ? 'bg-primary/5 text-primary font-bold' : 'text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                {cls.name}
-              </button>
-            ))}
-          </div>
-        )}
+          <span className="text-[11px] bg-white/20 px-2 py-0.5 rounded-full text-white font-medium">Kelas Tetap</span>
+        </div>
       </div>
 
       {/* Day Selector */}
@@ -620,11 +591,11 @@ export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast, user, o
             <button
               key={day.id}
               onClick={() => setSelectedDay(day.id)}
-              className={`shrink-0 px-4 py-2.5 rounded-full text-xs font-bold transition-all ${
+              className={'shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ' + (
                 selectedDay === day.id
-                  ? 'bg-primary text-white shadow-md'
+                  ? 'bg-primary text-white shadow-md shadow-primary/30'
                   : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'
-              }`}
+              )}
             >
               {day.name.toUpperCase()}
             </button>
@@ -632,35 +603,39 @@ export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast, user, o
         </div>
 
         {/* Search */}
-        <div className="relative mb-4">
+        <div className="relative mb-3 mt-2">
           <span className="material-symbols-outlined notranslate absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
           <input
             type="text"
-            placeholder="Cari mapel atau guru..."
+            placeholder="Cari mata pelajaran atau guru..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            className="w-full pl-10 pr-4 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>
 
         {/* Schedule List */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2.5">
           {currentSchedules.length === 0 ? (
-            <div className="bg-white p-8 rounded-2xl flex flex-col items-center gap-3 border border-slate-100">
+            <div className="bg-white p-8 rounded-2xl flex flex-col items-center gap-2 border border-slate-100 text-center">
               <span className="material-symbols-outlined notranslate text-4xl text-slate-300">event_busy</span>
               <p className="text-slate-500 text-sm font-bold">Tidak ada jadwal</p>
+              <p className="text-slate-400 text-xs">Tidak ada kegiatan belajar pada hari ini</p>
             </div>
           ) : (
             currentSchedules.map((item, idx) => (
-              <div key={idx} className="bg-white rounded-xl border border-slate-100 shadow-sm p-3 flex gap-3">
-                <div className="w-1 rounded-full bg-primary shrink-0" />
+              <div key={idx} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3.5 flex gap-3 items-center">
+                <div className="w-1.5 self-stretch rounded-full bg-primary shrink-0" />
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-primary text-xs font-bold">{item.time}</span>
-                    <span className="text-slate-400 text-[10px]">{item.room}</span>
+                    <span className="text-slate-400 text-[10px] bg-slate-50 px-2 py-0.5 rounded border border-slate-100 font-medium">{item.room || 'Lab TKJ'}</span>
                   </div>
-                  <h3 className="font-semibold text-sm text-slate-800">{item.subject}</h3>
-                  <p className="text-slate-500 text-[11px] mt-0.5">{item.teacher}</p>
+                  <h3 className="font-bold text-sm text-slate-800">{item.subject}</h3>
+                  <p className="text-slate-500 text-xs mt-0.5 flex items-center gap-1">
+                    <span className="material-symbols-outlined notranslate text-[14px]">person</span>
+                    {item.teacher}
+                  </p>
                 </div>
               </div>
             ))

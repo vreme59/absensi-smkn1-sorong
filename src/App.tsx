@@ -70,11 +70,17 @@ export default function App() {
         roleTitle:
           supabaseRole === 'guru' ? 'Guru Mata Pelajaran'
           : supabaseRole === 'admin' ? 'Administrator Sekolah'
-          : supabaseRole === 'sekretaris' ? `Sekretaris Kelas • ${(auth.profile as any)?.kelas?.nama ?? ''}`
-          : `Siswa • ${(auth.profile as any)?.kelas?.nama ?? ''}`,
+          : supabaseRole === 'sekretaris' ? `Sekretaris Kelas`
+          : `Siswa`,
         identifier: auth.profile.username,
+        kelas_id: auth.profile.kelas_id || 'e88128be-8fc3-4973-8d69-00ef17571626',
+        kelas: (auth.profile as any).kelas || { id: 'e88128be-8fc3-4973-8d69-00ef17571626', nama: 'XII TKJ 1' },
       }
-    : USER_PROFILES.siswa;
+    : {
+        ...USER_PROFILES.siswa,
+        kelas_id: 'e88128be-8fc3-4973-8d69-00ef17571626',
+        kelas: { id: 'e88128be-8fc3-4973-8d69-00ef17571626', nama: 'XII TKJ 1' },
+      };
 
   const handleLogin = async (role: UserRole, identifier?: string, password?: string) => {
     if (!identifier || !password) return;
@@ -88,7 +94,7 @@ export default function App() {
       return;
     }
     if (identifier === 'Bypass Siswa') {
-      auth.mockLogin({ role: 'siswa', name: 'Alif Naufal', roleTitle: 'Siswa • XII TKJ 1', identifier: 'Bypass Siswa' });
+      auth.mockLogin({ role: 'siswa', name: 'Alif Naufal', roleTitle: 'Siswa', kelas_id: 'e88128be-8fc3-4973-8d69-00ef17571626', kelas: { nama: 'XII TKJ 1' } });
       setCurrentTab('beranda');
       showToast('Mode Debug', 'Masuk sebagai Siswa', 'info');
       return;

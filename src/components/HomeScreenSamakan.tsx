@@ -1,3 +1,4 @@
+import { supabase } from '../lib/supabase';
 import React, { useState, useEffect } from 'react';
 import { SCHEDULES_BY_DAY } from "../data/samakan/scheduleData";
 import { UserProfile, StudentAttendance, ClassAttendanceSummary, TeacherCallAlert } from '../types_samakan';
@@ -18,6 +19,66 @@ interface HomeScreenProps {
 export const HomeScreenGuru: React.FC<HomeScreenProps> = ({ user, onNavigateToTab, onShowToast }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [sisaKelas, setSisaKelas] = useState(0);
+  const [isMengajar, setIsMengajar] = useState(false);
+
+  useEffect(() => {
+    async function fetchSisaKelas() {
+      try {
+        const hariNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        let currentDayIndex = currentTime.getDay();
+        if ((window as any).DEBUG_DAY_INDEX !== undefined) {
+          currentDayIndex = ((window as any).DEBUG_DAY_INDEX === 6) ? 0 : (window as any).DEBUG_DAY_INDEX + 1;
+        }
+        const hariIni = hariNames[currentDayIndex];
+        const nowMin = currentTime.getHours() * 60 + currentTime.getMinutes();
+
+        const { data: schedules } = await supabase
+          .from('jadwal')
+          .select('id, jam_mulai, jam_selesai, mapel:mapel_id(nama), kelas:kelas_id(id, nama), guru_id')
+          .eq('hari', hariIni)
+          .eq('guru_id', user.id);
+
+        if (!schedules || schedules.length === 0) {
+          setSisaKelas(0);
+          setIsMengajar(false);
+          return;
+        }
+
+        const grouped: any[] = [];
+        schedules.forEach((item: any) => {
+          const lastGroup = grouped[grouped.length - 1];
+          const [sh, sm] = (item.jam_mulai || '00:00').split(':').map(Number);
+          const [eh, em] = (item.jam_selesai || '00:00').split(':').map(Number);
+          const itemDuration = (eh * 60 + em) - (sh * 60 + sm);
+
+          if (
+            lastGroup &&
+            lastGroup.kelas?.id === item.kelas?.id &&
+            lastGroup.mapel?.nama === item.mapel?.nama
+          ) {
+            lastGroup.endMin = (eh * 60 + em);
+            lastGroup.duration += itemDuration;
+          } else {
+            grouped.push({
+              ...item,
+              startMin: (sh * 60 + sm),
+              endMin: (eh * 60 + em),
+              duration: itemDuration
+            });
+          }
+        });
+
+        const futureClasses = grouped.filter(g => g.endMin > nowMin);
+        setSisaKelas(futureClasses.length);
+
+        const currentActive = grouped.find(g => nowMin >= g.startMin && nowMin < g.endMin);
+        setIsMengajar(!!currentActive);
+
+      } catch (err) {}
+    }
+    fetchSisaKelas();
+  }, [user.id, currentTime]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -128,7 +189,7 @@ export const HomeScreenGuru: React.FC<HomeScreenProps> = ({ user, onNavigateToTa
               <div className="mt-1 flex items-center gap-2">
                 <span className="font-headline font-bold text-2xl tracking-tight text-white">{timeString} WIT</span>
                 <span className="px-2 py-0.5 rounded-full bg-amber-500/25 text-amber-100 font-label-sm text-[11px] font-bold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span> SEDANG MENGAJAR
+                  <span className={`w-1.5 h-1.5 rounded-full ${isMengajar ? 'bg-amber-400 animate-pulse' : 'bg-slate-300'}`}></span> {isMengajar ? 'SEDANG MENGAJAR' : 'ISTIRAHAT'}
                 </span>
               </div>
             </div>
@@ -138,7 +199,7 @@ export const HomeScreenGuru: React.FC<HomeScreenProps> = ({ user, onNavigateToTa
                 Sisa Kelas
               </span>
               <div className="font-headline font-bold text-xl text-white">
-                2 Kelas
+                {sisaKelas} Kelas
               </div>
             </div>
           </div>
@@ -246,6 +307,97 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
   const [localStudents, setLocalStudents] = useState<StudentAttendance[]>(students);
 
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [dynamicSummary, setDynamicSummary] = useState(classSummary);
+
+  useEffect(() => {
+    async function fetchSummary() {
+      const kelasId = user.kelas_id || (user as any).kelas?.id || 'e88128be-8fc3-4973-8d69-00ef17571626';
+      const dateObj = currentTime || new Date();
+      const todayStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+
+      // 1. Get total students in class
+      const { count: totalCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('kelas_id', kelasId);
+      const totalSiswa = totalCount || 37;
+
+      // 2. Check absen_harian for today
+      const { data: harianData } = await supabase
+        .from('absen_harian')
+        .select('status')
+        .eq('kelas_id', kelasId)
+        .eq('tanggal', todayStr);
+
+      let h = 0, s = 0, i = 0, a = 0;
+
+      if (harianData && harianData.length > 0) {
+        harianData.forEach(r => {
+          if (r.status === 'Hadir' || r.status === 'Terlambat') h++;
+          else if (r.status === 'Sakit') s++;
+          else if (r.status === 'Izin') i++;
+          else if (r.status === 'Alfa' || r.status === 'Bolos') a++;
+        });
+      } else {
+        // Fallback: check absen_mapel for today
+        const { data: classJadwal } = await supabase
+          .from('jadwal')
+          .select('id')
+          .eq('kelas_id', kelasId);
+        
+        const jadwalIds = (classJadwal || []).map(j => j.id);
+
+        if (jadwalIds.length > 0) {
+          const { data: mapelData } = await supabase
+            .from('absen_mapel')
+            .select('status, siswa_id')
+            .in('jadwal_id', jadwalIds)
+            .eq('tanggal', todayStr);
+
+          if (mapelData && mapelData.length > 0) {
+            const studentStatusMap = {};
+            mapelData.forEach(r => {
+              studentStatusMap[r.siswa_id] = r.status;
+            });
+            Object.values(studentStatusMap).forEach(status => {
+              if (status === 'Hadir' || status === 'Terlambat') h++;
+              else if (status === 'Sakit') s++;
+              else if (status === 'Izin') i++;
+              else if (status === 'Alfa' || status === 'Bolos') a++;
+            });
+          }
+        }
+      }
+
+      setDynamicSummary({
+        className: (user as any).kelas?.nama || 'XII TKJ 1',
+        totalStudents: totalSiswa,
+        present: h,
+        sick: s,
+        permitted: i,
+        unexcused: a,
+        validationStatus: harianData && harianData.length > 0 ? 'valid' : 'menunggu_acc'
+      });
+    }
+
+    fetchSummary();
+
+    // Supabase Realtime subscription
+    const channel = supabase
+      .channel('realtime_absen_home_' + Math.random())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'absen_harian' }, () => {
+        fetchSummary();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'absen_mapel' }, () => {
+        fetchSummary();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user.kelas_id, currentTime]);
+
   useEffect(() => {
     const timer = setInterval(() => {
       const dbgTime = (window as any).DEBUG_TIME;
@@ -287,12 +439,48 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
     onShowToast('Semua Ditandai Hadir', 'Status draft diperbarui ke 34 siswa hadir.', 'info');
   };
 
-  const handleSubmitDraft = () => {
+  const handleSubmitDraft = async () => {
     onSubmitMorningDraft(localStudents);
     setShowAbsenModal(false);
+    
+    try {
+      const kelasId = user.kelas_id || 'e88128be-8fc3-4973-8d69-00ef17571626';
+      const dateObj = currentTime || new Date();
+      const todayStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+
+      const { data: dbStudents } = await supabase
+        .from('profiles')
+        .select('id, nama')
+        .eq('kelas_id', kelasId);
+
+      if (dbStudents && dbStudents.length > 0) {
+        const insertData = dbStudents.map((s, idx) => {
+          const matchedLocal = localStudents.find(ls => ls.name.toLowerCase() === s.nama.toLowerCase()) || localStudents[idx % localStudents.length];
+          const statusMap: Record<string, string> = {
+            hadir: 'Hadir',
+            sakit: 'Sakit',
+            izin: 'Izin',
+            alfa: 'Alfa'
+          };
+          return {
+            tanggal: todayStr,
+            siswa_id: s.id,
+            kelas_id: kelasId,
+            status: statusMap[matchedLocal?.morningStatus || 'hadir'] || 'Hadir',
+            status_validasi: 'draft',
+            diinput_oleh: user.id
+          };
+        });
+
+        await supabase.from('absen_harian').upsert(insertData, { onConflict: 'tanggal,siswa_id' });
+      }
+    } catch (err) {
+      console.error('Error saving absen_harian:', err);
+    }
+
     onShowToast(
       'Draft Presensi Terkirim!',
-      'Telah masuk ke antrean validasi Guru Jam Pertama (Pak Budi Santoso).',
+      'Telah masuk ke database dan antrean validasi guru.',
       'success'
     );
   };
@@ -363,15 +551,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
             <h1 className="font-headline font-bold text-xl text-white tracking-tight">
               {user.name}
             </h1>
-            <div className="flex items-center gap-1.5 mt-1">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-white font-label-sm text-[11px] font-semibold">
-                {user.roleTitle}
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/20 text-primary-fixed font-label-sm text-[11px] font-semibold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-ping"></span>
-                Di Sekolah
-              </span>
-            </div>
+            
           </div>
 
           <button
@@ -602,11 +782,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
               <h2 className="font-headline font-bold text-base text-on-surface">
-                Absensi Harian XII TKJ 1
+                Absensi Harian {user?.kelas?.nama || "XII TKJ 1"}
               </h2>
             </div>
             <span className="px-2.5 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-[11px] font-bold">
-              {classSummary.totalStudents} Total Siswa
+              {dynamicSummary.totalStudents} Total Siswa
             </span>
           </div>
 
@@ -614,7 +794,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
           <div className="grid grid-cols-4 gap-2 text-center">
             <div className="p-2 rounded-xl bg-surface-container-low flex flex-col items-center">
               <span className="font-headline font-bold text-xl text-emerald-600">
-                {classSummary.present}
+                {dynamicSummary.present}
               </span>
               <span className="font-label-sm text-[11px] text-on-surface-variant font-semibold">
                 Hadir
@@ -622,7 +802,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
             </div>
             <div className="p-2 rounded-xl bg-amber-50 flex flex-col items-center">
               <span className="font-headline font-bold text-xl text-amber-600">
-                {classSummary.sick}
+                {dynamicSummary.sick}
               </span>
               <span className="font-label-sm text-[11px] text-on-surface-variant font-semibold">
                 Sakit
@@ -630,7 +810,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
             </div>
             <div className="p-2 rounded-xl bg-surface-container flex flex-col items-center">
               <span className="font-headline font-bold text-xl text-primary">
-                {classSummary.permitted}
+                {dynamicSummary.permitted}
               </span>
               <span className="font-label-sm text-[11px] text-on-surface-variant font-semibold">
                 Izin
@@ -638,7 +818,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
             </div>
             <div className="p-2 rounded-xl bg-error-container/40 flex flex-col items-center">
               <span className="font-headline font-bold text-xl text-error">
-                {classSummary.unexcused}
+                {dynamicSummary.unexcused}
               </span>
               <span className="font-label-sm text-[11px] text-on-surface-variant font-semibold">
                 Alfa
@@ -1155,7 +1335,7 @@ export const LiveSessionCard: React.FC<{ user: any, currentTime: Date, onShowToa
 
         <h2 
           className="text-[20px] font-headline font-bold text-slate-800 leading-tight mb-4 cursor-pointer hover:text-primary transition-colors flex items-center gap-2"
-          onClick={() => onNavigateToTab('absensi')}
+          onClick={() => setIsModalOpen(true)}
         >
           {mapelNama}
           <span className="material-symbols-outlined notranslate text-primary text-[18px] opacity-70">open_in_new</span>
@@ -1191,13 +1371,21 @@ export const LiveSessionCard: React.FC<{ user: any, currentTime: Date, onShowToa
         </div>
 
         <button 
-          onClick={() => onNavigateToTab('absensi')}
+          onClick={() => setIsModalOpen(true)}
           className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-[14px] shadow-lg shadow-primary/30 transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
         >
           <span className="material-symbols-outlined notranslate text-[18px]">how_to_reg</span>
           {user.role === 'guru' ? 'Kelola Absen Kelas Ini' : 'Isi Presensi Kelas Sekarang'}
         </button>
       </div>
+
+      <AbsensiModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        jadwalItem={liveSession}
+        guruId={liveSession.guru_id}
+        onShowToast={onShowToast}
+      />
     </div>
   );
 };
