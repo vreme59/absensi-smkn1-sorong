@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { UserProfile } from '../types';
+import { compressAvatarImage } from '../utils/imageCompressor';
 
 // Fallback high-quality avatar if network image is blocked
 const FALLBACK_AVATAR =
@@ -22,29 +23,32 @@ export const EditProfileScreen: React.FC<{
   const [avatar, setAvatar] = useState(user.avatarUrl || FALLBACK_AVATAR);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarError, setAvatarError] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [compressionNotice, setCompressionNotice] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('Profil berhasil diperbarui!');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle avatar file selection
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle avatar file selection with automatic compression
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        showFeedbackToast('Ukuran foto maksimal 5 MB.');
-        return;
+      setIsCompressing(true);
+      try {
+        // Compress avatar to high quality max 512x512
+        const result = await compressAvatarImage(file, 512, 0.85);
+        setAvatar(result.dataUrl);
+        setAvatarFile(result.file);
+        setCompressionNotice(`Dioptimasi: ${result.originalSizeKB} KB → ${result.compressedSizeKB} KB (-${result.compressionRatioPercent}%)`);
+        showFeedbackToast(`Foto berhasil dioptimasi (${result.compressedSizeKB} KB) tetap jernih! Klik Simpan.`);
+      } catch (err: any) {
+        console.error('Error compressing image:', err);
+        showFeedbackToast('Gagal memproses gambar. Coba gambar lain.');
+      } finally {
+        setIsCompressing(false);
       }
-      setAvatarFile(file);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setAvatar(event.target.result as string);
-          showFeedbackToast('Foto profil dipilih! Jangan lupa simpan.');
-        }
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -66,25 +70,27 @@ export const EditProfileScreen: React.FC<{
       const userId = session.user.id;
       let newAvatarUrl = avatar;
 
-      // 1. Upload foto jika ada file baru
+      // 1. Upload foto jika ada file baru (dengan fallback ke dataURL)
       if (avatarFile) {
-        const fileExt = avatarFile.name.split('.').pop();
-        const fileName = `${userId}_${Date.now()}.${fileExt}`;
+        const fileName = `${userId}_${Date.now()}.jpg`;
         const filePath = `${userId}/${fileName}`;
         
-        const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(filePath, avatarFile, { upsert: true });
-          
-        if (uploadError) {
-          console.error('Avatar upload error:', uploadError);
-          showFeedbackToast('Gagal mengupload foto profil.');
-          setIsSaving(false);
-          return;
+        try {
+          const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(filePath, avatarFile, { upsert: true, contentType: 'image/jpeg' });
+            
+          if (!uploadError) {
+            const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
+            newAvatarUrl = publicUrl;
+          } else {
+            console.warn('Storage upload error, using compressed dataURL fallback:', uploadError);
+            newAvatarUrl = avatar;
+          }
+        } catch (storageErr) {
+          console.warn('Storage exception, using compressed dataURL fallback:', storageErr);
+          newAvatarUrl = avatar;
         }
-        
-        const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
-        newAvatarUrl = publicUrl;
       }
 
       // 2. Update profiles table
@@ -101,7 +107,7 @@ export const EditProfileScreen: React.FC<{
         throw updateError;
       }
 
-      showFeedbackToast('Profil siswa berhasil diperbarui!');
+      showFeedbackToast('Foto profil & data berhasil diperbarui!');
       
       // Update parent state
       onProfileUpdated({
@@ -199,16 +205,32 @@ export const EditProfileScreen: React.FC<{
               className="hidden"
             />
             
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute bottom-0 right-0 w-8 h-8 bg-[#005fa0] border-2 border-white rounded-full text-white flex items-center justify-center hover:bg-[#004e84] active:scale-95 transition-all shadow-md cursor-pointer"
-              title="Ganti Foto Profil"
-            >
-              <span className="material-symbols-outlined text-[16px]">photo_camera</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-0 right-0 w-8 h-8 bg-[#005fa0] border-2 border-white rounded-full text-white flex items-center justify-center hover:bg-[#004e84] active:scale-95 transition-all shadow-md cursor-pointer"
+                title="Ganti Foto Profil"
+              >
+                <span className="material-symbols-outlined text-[16px]">photo_camera</span>
+              </button>
+
+              {isCompressing && (
+                <div className="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center text-white text-[10px] font-bold gap-1 backdrop-blur-xs">
+                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Kompresi...</span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+
+          {compressionNotice && (
+            <div className="relative z-10 -mt-8 mb-4 flex justify-center">
+              <span className="bg-emerald-500 text-white shadow-md border border-emerald-300 px-3 py-1 rounded-full text-[10px] font-bold text-center flex items-center gap-1">
+                <span className="material-symbols-outlined notranslate text-[13px]">check_circle</span>
+                {compressionNotice}
+              </span>
+            </div>
+          )}
 
         {/* Form Container */}
         <div className="px-4 sm:px-6 -mt-6 pb-8 relative z-10">

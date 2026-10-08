@@ -17,18 +17,18 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   const tabs = [
     {
       id: 'beranda',
-      label: 'Beranda',
-      icon: 'home',
+      label: userRole === 'operator' ? 'Panel TU' : 'Beranda',
+      icon: userRole === 'operator' ? 'admin_panel_settings' : 'home',
     },
     {
       id: 'jadwal',
-      label: userRole === 'operator' ? 'Kelola Jadwal' : 'Jadwal',
+      label: userRole === 'operator' ? 'Jadwal' : 'Jadwal',
       icon: 'calendar_today',
     },
     {
       id: 'absensi',
-      label: isTeacherTier ? 'Validasi' : 'Absensi',
-      icon: isTeacherTier ? 'fact_check' : 'checklist',
+      label: userRole === 'operator' ? 'Wali & Piket' : isTeacherTier ? 'Validasi' : 'Absensi',
+      icon: userRole === 'operator' ? 'supervisor_account' : isTeacherTier ? 'fact_check' : 'checklist',
       badge: isTeacherTier && pendingValidationCount > 0 ? pendingValidationCount : undefined,
     },
     {

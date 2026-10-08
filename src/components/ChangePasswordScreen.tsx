@@ -6,6 +6,8 @@ export const ChangePasswordScreen: React.FC<{
 }> = ({ onBack }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -21,7 +23,7 @@ export const ChangePasswordScreen: React.FC<{
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      showFeedbackToast('Kata sandi tidak cocok!', 'error');
+      showFeedbackToast('Kata sandi konfirmasi tidak cocok!', 'error');
       return;
     }
     if (password.length < 6) {
@@ -39,7 +41,7 @@ export const ChangePasswordScreen: React.FC<{
         await supabase.from('profiles').update({ must_change_password: false }).eq('id', session.user.id);
       }
 
-      showFeedbackToast('Kata sandi berhasil diubah!', 'success');
+      showFeedbackToast('Kata sandi berhasil diperbarui!', 'success');
       setTimeout(() => {
         onBack();
       }, 1500);
@@ -58,7 +60,7 @@ export const ChangePasswordScreen: React.FC<{
   ].join(' ');
 
   return (
-    <div className="w-full max-w-md mx-auto min-h-screen bg-slate-50 flex flex-col relative pb-20 selection:bg-[#005fa0] selection:text-white shadow-xl sm:border-x sm:border-slate-200">
+    <div className="w-full max-w-md mx-auto min-h-screen bg-slate-50 flex flex-col relative pb-20 selection:bg-[#005fa0] selection:text-white shadow-xl sm:border-x sm:border-slate-200 font-body">
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md px-4 py-3 flex items-center border-b border-slate-100 shadow-sm gap-2">
         <button type="button" onClick={onBack} className="w-10 h-10 -ml-1 rounded-full flex items-center justify-center text-slate-800 hover:bg-slate-100 active:scale-95 transition-all">
           <span className="material-symbols-outlined text-[24px]">arrow_back</span>
@@ -73,20 +75,29 @@ export const ChangePasswordScreen: React.FC<{
 
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-6 pb-8 relative z-10">
         <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col gap-6">
-          <p className="text-sm text-slate-600 font-medium">Buat kata sandi baru yang kuat untuk mengamankan akun Dapodik / Student Hub Anda.</p>
+          <p className="text-sm text-slate-600 font-medium">Buat kata sandi baru yang aman untuk melindungi akun presensi dan akademik Anda.</p>
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-[#0b1c30] flex items-center gap-1">Kata Sandi Baru</label>
               <div className="relative flex items-center">
                 <span className="material-symbols-outlined absolute left-3.5 text-slate-400 text-[20px] pointer-events-none">lock</span>
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Minimal 6 karakter"
-                  className="w-full h-12 pl-11 pr-4 bg-[#eef4fc] text-[#0b1c30] text-[14px] font-medium rounded-xl border border-transparent focus:border-[#005fa0] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#005fa0]/15 transition-all"
+                  className="w-full h-12 pl-11 pr-11 bg-[#eef4fc] text-[#0b1c30] text-[14px] font-medium rounded-xl border border-transparent focus:border-[#005fa0] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#005fa0]/15 transition-all"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 p-1 text-slate-400 hover:text-slate-600"
+                >
+                  <span className="material-symbols-outlined notranslate text-[20px]">
+                    {showPassword ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -95,13 +106,22 @@ export const ChangePasswordScreen: React.FC<{
               <div className="relative flex items-center">
                 <span className="material-symbols-outlined absolute left-3.5 text-slate-400 text-[20px] pointer-events-none">lock_reset</span>
                 <input
-                  type="password"
+                  type={showConfirmPassword ? 'text' : 'password'}
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Konfirmasi kata sandi"
-                  className="w-full h-12 pl-11 pr-4 bg-[#eef4fc] text-[#0b1c30] text-[14px] font-medium rounded-xl border border-transparent focus:border-[#005fa0] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#005fa0]/15 transition-all"
+                  className="w-full h-12 pl-11 pr-11 bg-[#eef4fc] text-[#0b1c30] text-[14px] font-medium rounded-xl border border-transparent focus:border-[#005fa0] focus:bg-white focus:outline-none focus:ring-3 focus:ring-[#005fa0]/15 transition-all"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 p-1 text-slate-400 hover:text-slate-600"
+                >
+                  <span className="material-symbols-outlined notranslate text-[20px]">
+                    {showConfirmPassword ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -111,7 +131,14 @@ export const ChangePasswordScreen: React.FC<{
                 disabled={isSaving}
                 className="w-full h-12 bg-[#005fa0] hover:bg-[#004e84] active:scale-[0.99] text-white rounded-xl text-[14px] font-semibold tracking-wide shadow-md shadow-[#005fa0]/25 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-75"
               >
-                {isSaving ? 'Menyimpan...' : 'Simpan Kata Sandi'}
+                {isSaving ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Menyimpan...</span>
+                  </>
+                ) : (
+                  <span>Simpan Kata Sandi</span>
+                )}
               </button>
             </div>
           </form>

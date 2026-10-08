@@ -53,12 +53,13 @@ export function useAuth() {
   const login = useCallback(async (identifier: string, password: string): Promise<{ profile: Profile | null; error: string | null }> => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     let finalUsername = identifier.trim();
+    const cleanLower = finalUsername.toLowerCase();
 
-    // Resolve name or NISN to username
+    // Resolve name or NISN or TU to username
     let { data: profileLookup } = await supabase
       .from('profiles')
       .select('username')
-      .or(`username.eq.${finalUsername},username.eq.s${finalUsername}`)
+      .or(`username.ilike.${cleanLower},username.ilike.s${cleanLower}`)
       .limit(1)
       .maybeSingle();
 
@@ -118,7 +119,7 @@ export function useAuth() {
 
   // 6-tier role mapping
   const resolveRole = (profile: Profile): UserRole => {
-    if (profile.role === 'operator') return 'operator';
+    if (profile.role === 'operator' || (profile.role as any) === 'admin') return 'operator';
     if (profile.role === 'guru_piket') return 'guru_piket';
     if (profile.role === 'wali_kelas') return 'wali_kelas';
     if (profile.role === 'guru') return 'guru';
