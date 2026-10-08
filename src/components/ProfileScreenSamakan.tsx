@@ -22,9 +22,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   
 
   return (
-    <div className="flex flex-col w-full max-w-md mx-auto pb-24">
+    <div className="flex flex-col w-full max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-3xl mx-auto pb-24 font-body">
       {/* Ocean Top Header Area */}
-      <div className="bg-primary pt-3 pb-8 px-4 text-white relative">
+      <div className="bg-primary pt-3 pb-8 px-4 sm:px-6 text-white relative">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-bold text-primary-fixed uppercase tracking-wider">
             Akun &amp; Privasi Dapodik

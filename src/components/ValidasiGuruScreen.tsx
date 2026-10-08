@@ -435,9 +435,9 @@ export const ValidasiGuruScreen: React.FC<ValidasiGuruScreenProps> = ({
   };
 
   const content = (
-    <div className="flex flex-col w-full max-w-md mx-auto pb-32 min-h-screen bg-slate-50 font-body">
+    <div className="flex flex-col w-full max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-5xl mx-auto pb-32 min-h-screen bg-slate-50 font-body">
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary to-[#003d73] pt-5 pb-6 px-5 shadow-lg">
+      <div className="bg-gradient-to-br from-primary to-[#003d73] pt-5 pb-6 px-4 sm:px-6 shadow-lg">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined notranslate text-white text-[24px]">verified</span>
@@ -920,7 +920,7 @@ export const ValidasiGuruScreen: React.FC<ValidasiGuruScreenProps> = ({
           </button>
         </div>
       ) : (
-        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 bg-white/95 backdrop-blur-md border-t border-slate-100 flex gap-2.5 z-30 shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-5xl mx-auto p-3 sm:p-4 bg-white/95 backdrop-blur-md border-t border-slate-100 flex gap-2.5 z-30 shadow-lg">
           {isModal && onClose && (
             <button
               onClick={onClose}
@@ -963,10 +963,10 @@ export const ValidasiGuruScreen: React.FC<ValidasiGuruScreenProps> = ({
 
   if (isModal) {
     return (
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
         <div
-          className="relative bg-white w-full max-w-md max-h-[94vh] rounded-t-[32px] sm:rounded-[32px] overflow-y-auto no-scrollbar flex flex-col animate-in slide-in-from-bottom-8 duration-300"
+          className="relative bg-white w-full max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl max-h-[94vh] rounded-t-[32px] sm:rounded-[32px] overflow-y-auto no-scrollbar flex flex-col animate-in slide-in-from-bottom-8 duration-300 shadow-2xl"
           onClick={e => e.stopPropagation()}
         >
           {content}

@@ -326,9 +326,9 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
   }, [studentStats, searchQuery]);
 
   return (
-    <div className="flex flex-col w-full max-w-md mx-auto pb-28 min-h-screen bg-slate-50 font-body">
+    <div className="flex flex-col w-full max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-5xl mx-auto pb-28 min-h-screen bg-slate-50 font-body">
       {/* Top Banner Header */}
-      <div className="bg-gradient-to-br from-[#003d73] to-primary pt-5 pb-6 px-5 shadow-lg text-white">
+      <div className="bg-gradient-to-br from-[#003d73] to-primary pt-5 pb-6 px-4 sm:px-6 shadow-lg text-white">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center backdrop-blur-md">
@@ -457,7 +457,9 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
               </div>
             </div>
 
-            {/* Status Live Wewenang Pengabsen Hari Ini */}
+            {/* Grid 2-Kolom Responsif untuk Tablet & Desktop */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+              {/* Status Live Wewenang Pengabsen Hari Ini */}
             {(() => {
               const wewenang = getWewenangPengabsenHariIni(
                 selectedClassId,
@@ -668,6 +670,7 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
                 </div>
               )}
             </div>
+            </div>
           </div>
         ) : activeTab === 'rawan' ? (
           /* TAB 1: RADAR SISWA RAWAN */
@@ -686,7 +689,8 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
                 <p className="text-slate-400 text-xs mt-1">Tidak ada siswa yang mencapai batas rawan presensi.</p>
               </div>
             ) : (
-              atRiskStudents.map((siswa) => {
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {atRiskStudents.map((siswa) => {
                 const isCritical = siswa.riskLevel === 'critical';
                 const isAlert = siswa.riskLevel === 'alert';
 
@@ -751,7 +755,8 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
                     </button>
                   </div>
                 );
-              })
+              })}
+              </div>
             )}
           </div>
         ) : (

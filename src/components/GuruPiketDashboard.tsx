@@ -228,9 +228,9 @@ export const GuruPiketDashboard: React.FC<GuruPiketDashboardProps> = ({
   }, [allClasses, filterTingkat]);
 
   return (
-    <div className="flex flex-col w-full max-w-md mx-auto pb-28 min-h-screen bg-slate-50 font-body">
+    <div className="flex flex-col w-full max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-5xl mx-auto pb-28 min-h-screen bg-slate-50 font-body">
       {/* Header */}
-      <div className="bg-gradient-to-br from-amber-700 via-primary to-slate-900 pt-5 pb-6 px-5 shadow-lg text-white">
+      <div className="bg-gradient-to-br from-amber-700 via-primary to-slate-900 pt-5 pb-6 px-4 sm:px-6 shadow-lg text-white">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center backdrop-blur-md">
@@ -594,8 +594,8 @@ export const GuruPiketDashboard: React.FC<GuruPiketDashboardProps> = ({
               ))}
             </div>
 
-            {/* Grid of Classes */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* Grid of Classes Responsif */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-2.5">
               {filteredClasses.map((cls) => (
                 <div
                   key={cls.id}

@@ -386,7 +386,7 @@ export default function App() {
               initialTab="wali_kelas"
             />
           ) : supabaseRole === 'siswa' ? (
-              <div className="w-full max-w-md mx-auto pb-20">
+              <div className="w-full max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl mx-auto pb-24 px-3 sm:px-4">
                 <AttendanceScreen
                   readOnly={!wewenangPengabsen.canInputAttendance}
                   officerInfo={{
@@ -416,7 +416,7 @@ export default function App() {
                   }}
                   isDraftSavedOffline={isDraftSavedOffline}
                   onNavigateHome={() => setCurrentTab('beranda')}
-                  containerWidthClass="max-w-md mx-auto"
+                  containerWidthClass="w-full"
                 />
               </div>
             ) : (

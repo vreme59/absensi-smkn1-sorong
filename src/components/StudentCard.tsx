@@ -171,88 +171,81 @@ export const StudentCard: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Case 1: Doctor note attachment strip (Ahmad Dani) */}
-      {student.id === '02' && student.attachment && (
-        <div className="flex items-center justify-between bg-[#dce9ff]/60 px-2.5 py-1.5 rounded-lg text-[#0b1c30]">
-          <div className="flex items-center gap-1.5 truncate">
-            <span className="material-symbols-outlined notranslate text-[15px] text-[#bb5800]">
-              attach_file
-            </span>
-            <span className="text-xs font-medium truncate">{student.attachment.title}</span>
-          </div>
-          <button
-            onClick={onViewAttachment}
-            className="text-[#005fa0] text-xs font-semibold shrink-0 underline ml-2 hover:text-[#004e84] cursor-pointer"
-            type="button"
-          >
-            Lihat
-          </button>
-        </div>
-      )}
-
-      {/* Case 2: Dispensation note strip (Cindy Laura) */}
-      {student.id === '04' && student.attachment && (
-        <div className="flex items-center justify-between bg-[#dce9ff]/60 px-2.5 py-1.5 rounded-lg text-[#0b1c30]">
-          <div className="flex items-center gap-1.5 truncate">
-            <span className="material-symbols-outlined notranslate text-[15px] text-[#0461a6]">
-              verified
-            </span>
-            <span className="text-xs font-medium truncate">{student.attachment.title}</span>
-          </div>
-          <span className="text-xs font-bold text-[#0461a6] shrink-0">
-            {student.attachment.verifiedBy || 'Waka Kesiswaan'}
-          </span>
-        </div>
-      )}
-
-      {/* Case 3: Bolos warning alert (Doni Tata) */}
-      {student.status === 'B' && student.warningAlert && (
+      {/* Warning alert if bolos */}
+      {(student.status === 'B' || student.warningAlert) && (
         <div className="flex items-start gap-1.5 bg-red-50 border border-red-200/80 px-2.5 py-2 rounded-xl text-red-900">
           <span className="material-symbols-outlined notranslate text-[17px] text-red-600 shrink-0 mt-0.5">
             warning
           </span>
           <p className="text-xs leading-snug">
             <span className="font-bold text-red-700">Terdeteksi Bolos:</span>{' '}
-            {student.warningAlert.replace('Terdeteksi Bolos: ', '')}
+            {(student.warningAlert || 'Siswa tidak berada di dalam kelas pada jam aktif.').replace('Terdeteksi Bolos: ', '')}
           </p>
         </div>
       )}
 
-      {/* Case 4: Keterangan Khusus & Lampiran box (Kevin Pratama) */}
-      {student.id === '07' && (
-        <div className="bg-[#dce9ff] p-2.5 rounded-xl flex flex-col gap-2">
+      {/* Dynamic Note & Attachment Box */}
+      {(student.note || student.attachment) ? (
+        <div className="bg-[#eff6ff] border border-blue-100 p-2.5 rounded-xl flex flex-col gap-1.5">
           <div className="flex items-center justify-between text-[#0b1c30]">
-            <div className="flex items-center gap-1.5">
-              <span className="material-symbols-outlined notranslate text-[16px] text-[#bb5800]">
-                edit_note
+            <div className="flex items-center gap-1.5 truncate">
+              <span className="material-symbols-outlined notranslate text-[16px] text-primary">
+                {student.attachment ? 'attach_file' : 'edit_note'}
               </span>
-              <span className="text-xs font-bold">Keterangan Khusus &amp; Lampiran</span>
+              <span className="text-[11px] font-bold text-slate-800 truncate">
+                {student.attachment?.title || 'Keterangan Presensi'}
+              </span>
             </div>
-            <button
-              disabled={readOnly} onClick={onEditNote}
-              className="text-xs text-[#005fa0] font-semibold hover:underline cursor-pointer"
-              type="button"
-            >
-              Ubah
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={onEditNote}
+                className="text-[11px] text-primary font-bold hover:underline cursor-pointer shrink-0 ml-2"
+              >
+                Ubah
+              </button>
+            )}
           </div>
-          <p className="text-xs text-[#404752] italic">
-            "{student.note || 'Sakit demam sejak semalam, surat dokter menyusul via WA Wali Kelas.'}"
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onViewAttachment}
-              className="flex items-center gap-1 bg-white px-2 py-1 rounded-md text-[#0b1c30] text-xs font-medium hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
-            >
-              <span className="material-symbols-outlined notranslate text-[14px] text-[#005fa0]">
-                image
-              </span>
-              <span>{student.attachment?.fileName || 'Surat_Keterangan.jpg'}</span>
-            </button>
-          </div>
+
+          {student.note && (
+            <p className="text-xs text-slate-600 italic leading-relaxed">
+              "{student.note}"
+            </p>
+          )}
+
+          {student.attachment && (
+            <div className="flex items-center justify-between pt-1">
+              <button
+                type="button"
+                onClick={onViewAttachment}
+                className="inline-flex items-center gap-1 bg-white border border-slate-200 px-2 py-1 rounded-md text-slate-800 text-[11px] font-semibold hover:bg-slate-50 transition-colors shadow-xs cursor-pointer"
+              >
+                <span className="material-symbols-outlined notranslate text-[14px] text-primary">
+                  image
+                </span>
+                <span className="truncate max-w-[140px]">{student.attachment?.fileName || 'Lihat Surat'}</span>
+              </button>
+
+              {student.attachment.verifiedBy && (
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                  {student.attachment.verifiedBy}
+                </span>
+              )}
+            </div>
+          )}
         </div>
-      )}
+      ) : !readOnly && (student.status === 'S' || student.status === 'I' || student.status === 'B' || student.status === 'A') ? (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={onEditNote}
+            className="text-[11px] font-semibold text-primary hover:text-primary-dark flex items-center gap-1 hover:underline cursor-pointer py-0.5"
+          >
+            <span className="material-symbols-outlined notranslate text-[14px]">add_circle</span>
+            <span>Tambah Catatan / Lampiran</span>
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 };

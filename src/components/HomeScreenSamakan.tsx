@@ -88,9 +88,9 @@ export const HomeScreenGuru: React.FC<HomeScreenProps> = ({ user, onNavigateToTa
   const dateString = currentTime.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
 
   return (
-    <div className="flex flex-col w-full max-w-md mx-auto pb-24 font-body bg-slate-50 min-h-screen">
+    <div className="flex flex-col w-full max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-5xl mx-auto pb-24 font-body bg-slate-50 min-h-screen">
       {/* Blue Header */}
-      <div className="bg-primary pt-6 pb-12 px-5 relative overflow-hidden rounded-b-[32px] shadow-[0_12px_32px_rgba(0,95,160,0.15)]">
+      <div className="bg-primary pt-6 pb-12 px-4 sm:px-6 relative overflow-hidden rounded-b-[32px] shadow-[0_12px_32px_rgba(0,95,160,0.15)]">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
         <div className="absolute top-1/2 -left-32 w-80 h-80 bg-sky-400/20 rounded-full blur-3xl"></div>
@@ -518,9 +518,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-md mx-auto pb-24">
+    <div className="flex flex-col w-full max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-5xl mx-auto pb-24 font-body">
       {/* DANA Style Top Surface Background Extension */}
-      <div className="bg-primary pt-3 pb-10 px-4 relative overflow-hidden rounded-b-[28px] shadow-[0_12px_32px_rgba(0,95,160,0.18)]">
+      <div className="bg-primary pt-3 pb-10 px-4 sm:px-6 relative overflow-hidden rounded-b-[28px] shadow-[0_12px_32px_rgba(0,95,160,0.18)]">
         {/* Fluid Curved Accent Elements */}
         <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
         <div className="absolute -left-16 bottom-0 w-40 h-40 rounded-full bg-secondary-fixed/15 blur-lg pointer-events-none"></div>

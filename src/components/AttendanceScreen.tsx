@@ -314,9 +314,9 @@ export const AttendanceScreen: React.FC<Props> = ({
       </div>
 
       {/* Student List */}
-      <div className="px-4 mt-3 flex flex-col gap-2.5" id="student-list-container">
+      <div className="px-3 sm:px-4 mt-3 grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3.5" id="student-list-container">
         {filteredStudents.length === 0 ? (
-          <div className="bg-white rounded-2xl p-8 text-center border border-slate-100 my-4 shadow-sm">
+          <div className="col-span-full bg-white rounded-2xl p-8 text-center border border-slate-100 my-4 shadow-sm">
             <span className="material-symbols-outlined notranslate text-[32px] text-slate-400 mb-1">
               search_off
             </span>
@@ -339,7 +339,7 @@ export const AttendanceScreen: React.FC<Props> = ({
 
       {readOnly ? (
         <div
-          className={`fixed bottom-16 left-1/2 -translate-x-1/2 w-full ${containerWidthClass} z-40 bg-white/95 backdrop-blur-md px-4 py-3 shadow-[0_-8px_24px_rgba(0,95,160,0.12)] border-t border-slate-200/90 transition-all`}
+          className="fixed bottom-16 left-1/2 -translate-x-1/2 w-full max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl z-40 bg-white/95 backdrop-blur-md px-4 py-3 shadow-[0_-8px_24px_rgba(0,95,160,0.12)] border-t border-slate-200/90 rounded-t-2xl transition-all"
         >
           <div className="flex items-center gap-2.5 text-slate-700">
             <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0 text-slate-500">
@@ -357,9 +357,9 @@ export const AttendanceScreen: React.FC<Props> = ({
         </div>
       ) : (
       <>
-      {/* Sticky Bottom Bar - Perfectly aligned to containerWidthClass */}
+      {/* Sticky Bottom Bar - Responsive max-width */}
       <div
-        className={`fixed bottom-16 left-1/2 -translate-x-1/2 w-full ${containerWidthClass} z-40 bg-white/95 backdrop-blur-md px-4 py-2.5 shadow-[0_-8px_24px_rgba(0,95,160,0.12)] flex flex-col gap-2 border-t border-slate-200/90 transition-all`}
+        className="fixed bottom-16 left-1/2 -translate-x-1/2 w-full max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-4xl z-40 bg-white/95 backdrop-blur-md px-4 py-2.5 shadow-[0_-8px_24px_rgba(0,95,160,0.12)] flex flex-col gap-2 border-t border-slate-200/90 rounded-t-2xl transition-all"
       >
         {/* Toggle Collapse Header Row */}
         <div className="flex items-center justify-between">

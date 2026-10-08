@@ -30,22 +30,22 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="fixed top-0 w-full z-40 bg-primary pt-safe shadow-[0_4px_16px_rgba(0,95,160,0.18)]">
-      <div className="max-w-md mx-auto h-16 px-4 flex items-center justify-between">
+      <div className="max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto h-16 px-3.5 sm:px-4 md:px-6 flex items-center justify-between">
         {/* Left: School Logo & Title */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2 sm:gap-3">
           <img
             alt="Logo SMKN 1 Sorong"
-            className="h-9 w-auto object-contain drop-shadow-sm"
+            className="h-8 sm:h-9 w-auto object-contain drop-shadow-sm"
             src={SCHOOL_LOGO}
           />
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
-              <span className="font-headline font-bold text-[17px] text-white tracking-wide leading-tight">
+              <span className="font-headline font-bold text-[15px] sm:text-[17px] text-white tracking-wide leading-tight">
                 SMKN 1 SORONG
               </span>
               <span className="w-2 h-2 rounded-full bg-secondary-fixed animate-pulse"></span>
             </div>
-            <span className="font-body text-[11px] font-semibold text-primary-fixed leading-tight">
+            <span className="font-body text-[10px] sm:text-[11px] font-semibold text-primary-fixed leading-tight">
               {tabLabels[currentTab] || 'SIAKAD'}
             </span>
           </div>
@@ -56,12 +56,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowRoleMenu(!showRoleMenu)}
-              className="bg-white/15 hover:bg-white/25 text-white px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 backdrop-blur-md border border-white/20 transition active:scale-95"
+              className="bg-white/15 hover:bg-white/25 text-white px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 backdrop-blur-md border border-white/20 transition active:scale-95 shadow-xs"
             >
               <span className="material-symbols-outlined notranslate text-[16px]">
                 {currentTab === 'wali-kelas' ? 'supervisor_account' : currentTab === 'guru-piket' ? 'security' : 'school'}
               </span>
-              <span className="text-[11px]">
+              <span className="text-[11px] sm:text-xs">
                 {currentTab === 'wali-kelas'
                   ? (user?.wali_kelas ? `Wali ${user.wali_kelas.nama}` : 'Wali Kelas')
                   : currentTab === 'guru-piket'

@@ -40,7 +40,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 
   return (
     <nav className="fixed bottom-0 w-full z-40 pb-safe bg-surface-container-lowest/95 backdrop-blur-xl border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,95,160,0.08)]">
-      <div className="max-w-md mx-auto flex justify-around items-center h-16 px-2">
+      <div className="max-w-md sm:max-w-lg md:max-w-xl mx-auto flex justify-around items-center h-16 px-2 sm:px-4">
         {tabs.map((tab) => {
           const isActive = currentTab === tab.id;
           return (

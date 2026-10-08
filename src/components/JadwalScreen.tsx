@@ -383,9 +383,9 @@ const JadwalGuruView: React.FC<{ user: UserProfile; onShowToast: any; onNavigate
 
   return (
     <>
-      <div className="flex flex-col w-full max-w-md mx-auto pb-28 min-h-screen bg-slate-50 font-body">
+      <div className="flex flex-col w-full max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-5xl mx-auto pb-28 min-h-screen bg-slate-50 font-body">
         {/* Header */}
-        <div className="bg-gradient-to-br from-primary to-[#003d73] pt-6 pb-6 px-5 shadow-md">
+        <div className="bg-gradient-to-br from-primary to-[#003d73] pt-6 pb-6 px-4 sm:px-6 shadow-md">
           <div className="flex items-center justify-between mb-3">
             <div>
               <h1 className="text-white font-headline font-bold text-lg flex items-center gap-2">
@@ -406,8 +406,8 @@ const JadwalGuruView: React.FC<{ user: UserProfile; onShowToast: any; onNavigate
         </div>
 
         {/* Day Selector */}
-        <div className="px-4 mt-4">
-          <div className="flex gap-2 overflow-x-auto pb-3 no-scrollbar -mx-4 px-4 snap-x">
+        <div className="px-3 sm:px-4 mt-4">
+          <div className="flex gap-2 overflow-x-auto pb-3 no-scrollbar -mx-3 sm:-mx-4 px-3 sm:px-4 snap-x">
             {days.map((day) => {
               const isToday = day === hariIni;
               return (
@@ -430,7 +430,7 @@ const JadwalGuruView: React.FC<{ user: UserProfile; onShowToast: any; onNavigate
           </div>
 
           {/* Schedule Cards */}
-          <div className="mt-4 flex flex-col gap-3">
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
             {isLoading ? (
               <div className="bg-white p-8 rounded-2xl flex flex-col items-center justify-center gap-3 border border-slate-100 shadow-sm">
                 <span className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -660,9 +660,9 @@ export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast, user, o
   });
 
   return (
-    <div className="flex flex-col w-full max-w-md mx-auto pb-28 min-h-screen bg-slate-50 font-body">
+    <div className="flex flex-col w-full max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-5xl mx-auto pb-28 min-h-screen bg-slate-50 font-body">
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary to-[#003d73] pt-5 pb-5 px-5 shadow-md">
+      <div className="bg-gradient-to-br from-primary to-[#003d73] pt-5 pb-5 px-4 sm:px-6 shadow-md">
         <div className="flex items-center justify-between mb-3">
           <div>
             <h1 className="text-white font-headline font-bold text-lg flex items-center gap-2">
@@ -690,8 +690,8 @@ export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast, user, o
       </div>
 
       {/* Day Selector */}
-      <div className="px-4 mt-4">
-        <div className="flex gap-2 overflow-x-auto pb-3 no-scrollbar -mx-4 px-4 snap-x">
+      <div className="px-3 sm:px-4 mt-4">
+        <div className="flex gap-2 overflow-x-auto pb-3 no-scrollbar -mx-3 sm:-mx-4 px-3 sm:px-4 snap-x">
           {days.map((day) => {
             const isToday = day === hariIni;
             return (
@@ -728,7 +728,7 @@ export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast, user, o
         </div>
 
         {/* Schedule Cards */}
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {isLoading ? (
             <div className="bg-white p-8 rounded-2xl flex flex-col items-center justify-center gap-3 border border-slate-100 shadow-sm">
               <span className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />

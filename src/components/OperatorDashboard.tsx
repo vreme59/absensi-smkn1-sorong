@@ -323,9 +323,9 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
   const activeClassName = classes.find(c => c.id === selectedClassId)?.nama || 'Kelas';
 
   return (
-    <div className="flex flex-col w-full max-w-md mx-auto pb-32 min-h-screen bg-slate-50 font-body">
+    <div className="flex flex-col w-full max-w-md sm:max-w-xl md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto pb-32 min-h-screen bg-slate-50 font-body">
       {/* Header Operator */}
-      <div className="bg-gradient-to-br from-slate-900 via-[#003d73] to-primary pt-5 pb-6 px-5 shadow-lg text-white">
+      <div className="bg-gradient-to-br from-slate-900 via-[#003d73] to-primary pt-5 pb-6 px-4 sm:px-6 shadow-lg text-white">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
             <img src={SCHOOL_LOGO} alt="SMKN 1 Sorong" className="w-10 h-10 object-contain drop-shadow" />
@@ -483,7 +483,7 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                 </p>
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                 {schedules.map((item, idx) => {
                   const jMulai = item.jam_mulai?.substring(0, 5);
                   const jSelesai = item.jam_selesai?.substring(0, 5);
@@ -554,8 +554,8 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
               />
             </div>
 
-            {/* Classes List with Wali Selector */}
-            <div className="flex flex-col gap-2.5">
+            {/* Classes List with Wali Selector Responsif */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {filteredWaliClasses.map((cls) => {
                 const currentWaliId = selectedWaliMap[cls.id] || cls.wali_kelas_id || '';
                 const isSavingThis = savingWaliClassId === cls.id;
@@ -677,7 +677,8 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                   Belum ada guru yang ditugaskan piket pada hari {selectedPiketDay}.
                 </div>
               ) : (
-                piketSchedule[selectedPiketDay].map((guruId) => {
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                  {piketSchedule[selectedPiketDay].map((guruId) => {
                   const teacherObj = teachers.find(t => t.id === guruId);
 
                   return (
@@ -708,7 +709,8 @@ export const OperatorDashboard: React.FC<OperatorDashboardProps> = ({
                       </button>
                     </div>
                   );
-                })
+                })}
+                </div>
               )}
             </div>
           </div>
