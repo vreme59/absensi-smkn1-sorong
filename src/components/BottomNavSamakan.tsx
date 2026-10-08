@@ -13,6 +13,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   userRole,
   pendingValidationCount = 0,
 }) => {
+  const isTeacherTier = userRole === 'guru' || userRole === 'wali_kelas' || userRole === 'guru_piket';
   const tabs = [
     {
       id: 'beranda',
@@ -21,14 +22,14 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     },
     {
       id: 'jadwal',
-      label: 'Jadwal',
+      label: userRole === 'operator' ? 'Kelola Jadwal' : 'Jadwal',
       icon: 'calendar_today',
     },
     {
       id: 'absensi',
-      label: userRole === 'guru' ? 'Absensi Guru' : 'Absensi',
-      icon: 'checklist',
-      badge: userRole === 'guru' && pendingValidationCount > 0 ? pendingValidationCount : undefined,
+      label: isTeacherTier ? 'Validasi' : 'Absensi',
+      icon: isTeacherTier ? 'fact_check' : 'checklist',
+      badge: isTeacherTier && pendingValidationCount > 0 ? pendingValidationCount : undefined,
     },
     {
       id: 'profil',

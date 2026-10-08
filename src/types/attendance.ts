@@ -13,13 +13,17 @@ export interface Attachment {
 
 export interface Student {
   id: string;
-  absentNo: string;
+  absentNo?: string;
+  studentNo?: string;
   name: string;
   nisn: string;
   status: AttendanceStatus;
   badge?: 'Sekretaris' | 'Ketua Kelas' | 'Perlu Tindak' | 'Baru Diubah';
   note?: string;
+  notes?: string;
   attachment?: Attachment;
+  hasAttachment?: boolean;
+  avatarUrl?: string;
   warningAlert?: string;
   lastUpdated?: string;
 }
@@ -43,4 +47,18 @@ export interface TimetablePeriod {
   teacher: string;
   room: string;
   status: 'active' | 'upcoming' | 'completed';
+}
+
+export interface ScheduleDay {
+  id: string;
+  name: string;
+}
+
+export interface SubjectSchedule {
+  id: string;
+  subject: string;
+  time: string;
+  teacher: string;
+  room?: string;
+  type: 'productive' | 'general';
 }

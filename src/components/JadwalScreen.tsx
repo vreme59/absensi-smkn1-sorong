@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { UserProfile } from '../types_samakan';
+import { UserProfile } from '../types';
 import { SCHEDULE_DAYS, SCHEDULES_BY_DAY } from '../data/samakan/scheduleData';
-import { ScheduleItem } from '../types_samakan';
+import { ScheduleItem } from '../types';
 import { supabase } from '../lib/supabase';
+import { ValidasiGuruScreen } from './ValidasiGuruScreen';
 
 interface JadwalScreenProps {
   user?: UserProfile;
   onShowToast: (title: string, desc: string, type?: 'success' | 'warning' | 'info') => void;
+  onNavigateToTab?: (tab: string) => void;
 }
 
 // ============================================================
@@ -462,7 +464,7 @@ const JadwalGuruView: React.FC<{ user: UserProfile; onShowToast: any; onNavigate
                 return (
                   <div
                     key={item.id || idx}
-                    onClick={() => onNavigateToTab?.('absensi')}
+                    onClick={() => setSelectedJadwal(item)}
                     className={`bg-white rounded-[20px] border shadow-sm flex overflow-hidden cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${
                       isLive
                         ? 'border-primary ring-2 ring-primary/20 shadow-primary/10'
@@ -529,41 +531,138 @@ const JadwalGuruView: React.FC<{ user: UserProfile; onShowToast: any; onNavigate
         </div>
       </div>
     
-      <AbsensiModal isOpen={!!selectedJadwal} onClose={() => setSelectedJadwal(null)} jadwalItem={selectedJadwal} guruId={user?.id} onShowToast={onShowToast} />
+      {selectedJadwal && (
+        <ValidasiGuruScreen
+          user={user}
+          initialClassId={selectedJadwal.kelas_id || selectedJadwal.kelas?.id}
+          initialJadwalItem={selectedJadwal}
+          isModal={true}
+          onClose={() => setSelectedJadwal(null)}
+          onShowToast={onShowToast}
+        />
+      )}
     </>
   );
 };
 
 
-export interface JadwalScreenProps {
-  onShowToast: (title: string, desc: string, type?: 'success' | 'warning' | 'info') => void;
-  user?: UserProfile;
-  onNavigateToTab?: (tab: string) => void;
-}
+
 
 // ============================================================
-// MAIN EXPORT - JADWAL SCREEN
+// MAIN EXPORT - JADWAL SCREEN (CONNECTED TO SUPABASE)
 // ============================================================
 export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast, user, onNavigateToTab }) => {
-  if (user?.role === 'guru') return <JadwalGuruView user={user} onShowToast={onShowToast} onNavigateToTab={onNavigateToTab} />;
+  if (user?.role === 'guru' || user?.role === 'wali_kelas' || user?.role === 'guru_piket') {
+    return <JadwalGuruView user={user} onShowToast={onShowToast} onNavigateToTab={onNavigateToTab} />;
+  }
 
-  const [selectedDay, setSelectedDay] = useState('senin');
+  const hariNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const today = new Date();
+  let hariIni = hariNames[today.getDay()];
+  if (hariIni === 'Minggu') hariIni = 'Senin';
+
+  const [selectedDay, setSelectedDay] = useState(hariIni);
   const [searchQuery, setSearchQuery] = useState('');
+  const [classes, setClasses] = useState<{ id: string; nama: string }[]>([]);
+  const [selectedKelasId, setSelectedKelasId] = useState<string>(
+    user?.kelas_id || (user as any)?.kelas?.id || ''
+  );
+  const [dbSchedules, setDbSchedules] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [dbError, setDbError] = useState<string | null>(null);
 
-  const currentSchedules = (SCHEDULES_BY_DAY[selectedDay] || []).filter((item: any) => {
+  const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+
+  // 1. Fetch available classes
+  useEffect(() => {
+    async function loadClasses() {
+      const { data } = await supabase
+        .from('kelas')
+        .select('id, nama')
+        .order('nama', { ascending: true });
+
+      if (data && data.length > 0) {
+        setClasses(data);
+        if (!selectedKelasId) {
+          const userClass = data.find(c => c.id === (user as any)?.kelas_id || c.nama === (user as any)?.kelas?.nama);
+          setSelectedKelasId(userClass ? userClass.id : data[0].id);
+        }
+      }
+    }
+    loadClasses();
+  }, [user]);
+
+  // 2. Fetch schedules for selected class & day from Supabase
+  useEffect(() => {
+    if (!selectedKelasId) return;
+
+    async function fetchClassSchedule() {
+      setIsLoading(true);
+      setDbError(null);
+
+      try {
+        const { data, error } = await supabase
+          .from('jadwal')
+          .select(`
+            id, jam_mulai, jam_selesai, hari, kelas_id,
+            kelas:kelas_id(id, nama),
+            mapel:mapel_id(nama),
+            guru:guru_id(id, nama)
+          `)
+          .eq('kelas_id', selectedKelasId)
+          .eq('hari', selectedDay)
+          .order('jam_mulai', { ascending: true });
+
+        if (error) throw error;
+
+        // Group consecutive sessions of same subject and teacher
+        const grouped: any[] = [];
+        (data || []).forEach((item: any) => {
+          const lastGroup = grouped[grouped.length - 1];
+          const [sh, sm] = (item.jam_mulai || '00:00').split(':').map(Number);
+          const [eh, em] = (item.jam_selesai || '00:00').split(':').map(Number);
+          const itemDuration = (eh * 60 + em) - (sh * 60 + sm);
+
+          if (
+            lastGroup &&
+            lastGroup.mapel?.nama === item.mapel?.nama &&
+            lastGroup.guru?.id === item.guru?.id
+          ) {
+            lastGroup.jam_selesai = item.jam_selesai;
+            lastGroup.sessionCount = (lastGroup.sessionCount || 1) + 1;
+            lastGroup.actualDuration = (lastGroup.actualDuration || 0) + itemDuration;
+          } else {
+            grouped.push({ ...item, sessionCount: 1, actualDuration: itemDuration });
+          }
+        });
+
+        setDbSchedules(grouped);
+      } catch (err: any) {
+        setDbError(err.message || 'Gagal memuat jadwal');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchClassSchedule();
+  }, [selectedKelasId, selectedDay]);
+
+  const selectedClassObj = classes.find(c => c.id === selectedKelasId);
+  const activeClassName = selectedClassObj?.nama || (user as any)?.kelas?.nama || 'Pilih Kelas';
+
+  // Filter by search query
+  const filteredSchedules = dbSchedules.filter((item: any) => {
     if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      (item.subject && item.subject.toLowerCase().includes(query)) ||
-      (item.teacher && item.teacher.toLowerCase().includes(query)) ||
-      (item.room && item.room.toLowerCase().includes(query))
-    );
+    const q = searchQuery.toLowerCase();
+    const mapel = (item.mapel?.nama || '').toLowerCase();
+    const guru = (item.guru?.nama || '').toLowerCase();
+    return mapel.includes(q) || guru.includes(q);
   });
 
   return (
     <div className="flex flex-col w-full max-w-md mx-auto pb-28 min-h-screen bg-slate-50 font-body">
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary to-[#003d73] pt-5 pb-5 px-5">
+      <div className="bg-gradient-to-br from-primary to-[#003d73] pt-5 pb-5 px-5 shadow-md">
         <div className="flex items-center justify-between mb-3">
           <div>
             <h1 className="text-white font-headline font-bold text-lg flex items-center gap-2">
@@ -572,73 +671,139 @@ export const JadwalScreen: React.FC<JadwalScreenProps> = ({ onShowToast, user, o
             </h1>
             <p className="text-sky-200 text-[11px] mt-0.5">SMKN 1 Sorong - Semester Ganjil 2026/2027</p>
           </div>
+          <div className="bg-white/15 rounded-2xl px-3 py-1.5 backdrop-blur-sm text-center">
+            <p className="text-white font-headline font-bold text-base leading-none">
+              {filteredSchedules.length}
+            </p>
+            <p className="text-sky-200 text-[9px] font-semibold">Mapel</p>
+          </div>
         </div>
 
-        {/* Fixed Class Display for Siswa (No dropdown) */}
-        <div className="bg-white/15 w-full py-2.5 rounded-xl text-white text-sm font-semibold backdrop-blur-sm flex items-center justify-between px-4">
+        {/* Fixed Class Display */}
+        <div className="bg-white/15 w-full py-2.5 rounded-xl text-white text-sm font-semibold backdrop-blur-sm flex items-center justify-between px-4 mt-2">
           <span className="flex items-center gap-2">
             <span className="material-symbols-outlined notranslate text-[18px]">school</span>
-            {(user as any)?.kelas?.nama || 'XII TKJ 1'}
+            Kelas {activeClassName}
           </span>
-          <span className="text-[11px] bg-white/20 px-2 py-0.5 rounded-full text-white font-medium">Kelas Tetap</span>
+          <span className="text-[11px] bg-white/20 px-2.5 py-0.5 rounded-full text-white font-medium">Kelas Tetap</span>
         </div>
       </div>
 
       {/* Day Selector */}
       <div className="px-4 mt-4">
-        <div className="flex gap-2 overflow-x-auto pb-3 no-scrollbar -mx-4 px-4">
-          {SCHEDULE_DAYS.map((day) => (
-            <button
-              key={day.id}
-              onClick={() => setSelectedDay(day.id)}
-              className={'shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ' + (
-                selectedDay === day.id
-                  ? 'bg-primary text-white shadow-md shadow-primary/30'
-                  : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'
-              )}
-            >
-              {day.name.toUpperCase()}
-            </button>
-          ))}
+        <div className="flex gap-2 overflow-x-auto pb-3 no-scrollbar -mx-4 px-4 snap-x">
+          {days.map((day) => {
+            const isToday = day === hariIni;
+            return (
+              <button
+                key={day}
+                onClick={() => setSelectedDay(day)}
+                className={`snap-start shrink-0 px-4 py-2.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  selectedDay === day
+                    ? 'bg-primary text-white shadow-md shadow-primary/30'
+                    : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                {day.toUpperCase()}
+                {isToday && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Search */}
-        <div className="relative mb-3 mt-2">
-          <span className="material-symbols-outlined notranslate absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+        <div className="relative mb-3 mt-1">
+          <span className="material-symbols-outlined notranslate absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
+            search
+          </span>
           <input
             type="text"
-            placeholder="Cari mata pelajaran atau guru..."
+            placeholder="Cari mata pelajaran atau nama guru..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm"
           />
         </div>
 
-        {/* Schedule List */}
-        <div className="flex flex-col gap-2.5">
-          {currentSchedules.length === 0 ? (
-            <div className="bg-white p-8 rounded-2xl flex flex-col items-center gap-2 border border-slate-100 text-center">
+        {/* Schedule Cards */}
+        <div className="flex flex-col gap-3">
+          {isLoading ? (
+            <div className="bg-white p-8 rounded-2xl flex flex-col items-center justify-center gap-3 border border-slate-100 shadow-sm">
+              <span className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+              <p className="text-slate-400 text-xs font-bold">Mengambil jadwal {activeClassName}...</p>
+            </div>
+          ) : dbError ? (
+            <div className="bg-red-50 p-4 rounded-xl border border-red-100 text-red-600 text-xs text-center font-semibold">
+              Gagal memuat jadwal: {dbError}
+            </div>
+          ) : filteredSchedules.length === 0 ? (
+            <div className="bg-white p-8 rounded-2xl flex flex-col items-center justify-center gap-2 border border-slate-100 shadow-sm text-center">
               <span className="material-symbols-outlined notranslate text-4xl text-slate-300">event_busy</span>
-              <p className="text-slate-500 text-sm font-bold">Tidak ada jadwal</p>
-              <p className="text-slate-400 text-xs">Tidak ada kegiatan belajar pada hari ini</p>
+              <p className="text-slate-600 text-sm font-bold">Tidak ada jadwal hari {selectedDay}</p>
+              <p className="text-slate-400 text-xs">Tidak ada kegiatan belajar mengajar untuk {activeClassName}</p>
             </div>
           ) : (
-            currentSchedules.map((item, idx) => (
-              <div key={idx} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3.5 flex gap-3 items-center">
-                <div className="w-1.5 self-stretch rounded-full bg-primary shrink-0" />
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-primary text-xs font-bold">{item.time}</span>
-                    <span className="text-slate-400 text-[10px] bg-slate-50 px-2 py-0.5 rounded border border-slate-100 font-medium">{item.room || 'Lab TKJ'}</span>
+            filteredSchedules.map((item: any, idx: number) => {
+              const jamMulai = item.jam_mulai ? item.jam_mulai.substring(0, 5) : '';
+              const jamSelesai = item.jam_selesai ? item.jam_selesai.substring(0, 5) : '';
+              const duration = item.actualDuration || 40;
+
+              // Check if session is live
+              const nowMin = today.getHours() * 60 + today.getMinutes();
+              const [startH, startM] = jamMulai.split(':').map(Number);
+              const [endH, endM] = jamSelesai.split(':').map(Number);
+              const sMin = startH * 60 + startM;
+              const eMin = endH * 60 + endM;
+              const isLive = selectedDay === hariIni && nowMin >= sMin && nowMin < eMin;
+              const isDone = selectedDay === hariIni && nowMin >= eMin;
+
+              return (
+                <div
+                  key={item.id || idx}
+                  className={`bg-white rounded-2xl border shadow-sm p-4 flex gap-3.5 items-center transition-all hover:shadow-md ${
+                    isLive
+                      ? 'border-primary ring-2 ring-primary/20 shadow-primary/10'
+                      : isDone
+                      ? 'border-slate-100 opacity-60'
+                      : 'border-slate-100'
+                  }`}
+                >
+                  <div className={`w-1.5 self-stretch rounded-full shrink-0 ${isLive ? 'bg-primary animate-pulse' : isDone ? 'bg-slate-300' : 'bg-primary'}`} />
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1.5 gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-primary font-bold text-xs">{jamMulai} - {jamSelesai} WIT</span>
+                        <span className="bg-emerald-50 text-emerald-600 text-[10px] font-bold px-1.5 py-0.2 rounded border border-emerald-100">
+                          {duration} Mnt
+                        </span>
+                      </div>
+                      {isLive ? (
+                        <span className="flex items-center gap-1 bg-emerald-50 text-emerald-600 text-[9px] font-bold px-2 py-0.5 rounded-full border border-emerald-100 shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          LIVE
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 text-[10px] bg-slate-50 px-2 py-0.5 rounded border border-slate-100 font-semibold shrink-0">
+                          {item.sessionCount || 1} JP
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className="font-headline font-bold text-sm text-slate-800 leading-snug truncate">
+                      {item.mapel?.nama || 'Mata Pelajaran'}
+                    </h3>
+
+                    <p className="text-slate-500 text-xs mt-1 flex items-center gap-1 truncate font-medium">
+                      <span className="material-symbols-outlined notranslate text-[15px] text-slate-400 shrink-0">person</span>
+                      <span className="truncate">{item.guru?.nama || 'Guru Belum Terjadwal'}</span>
+                    </p>
                   </div>
-                  <h3 className="font-bold text-sm text-slate-800">{item.subject}</h3>
-                  <p className="text-slate-500 text-xs mt-0.5 flex items-center gap-1">
-                    <span className="material-symbols-outlined notranslate text-[14px]">person</span>
-                    {item.teacher}
-                  </p>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

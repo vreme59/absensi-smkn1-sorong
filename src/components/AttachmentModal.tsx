@@ -35,7 +35,7 @@ export const AttachmentModal: React.FC<Props> = ({
         <div className="bg-[#005fa0] text-white px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">
-              {student.absentNo}
+              {student.absentNo ?? student.studentNo ?? '??'}
             </div>
             <div>
               <h3 className="font-bold text-base leading-tight">{student.name}</h3>

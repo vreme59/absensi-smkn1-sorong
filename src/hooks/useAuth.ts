@@ -50,41 +50,47 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, [loadProfile]);
 
-  const login = useCallback(async (identifier: string, password: string): Promise<{ profile: Profile | null; error: string | null; }> => {
+  const login = useCallback(async (identifier: string, password: string): Promise<{ profile: Profile | null; error: string | null }> => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     let finalUsername = identifier.trim();
-    const { data: profileLookup } = await supabase
+
+    // Resolve name or NISN to username
+    let { data: profileLookup } = await supabase
       .from('profiles')
       .select('username')
-      .ilike('nama', `%${finalUsername}%`)
+      .or(`username.eq.${finalUsername},username.eq.s${finalUsername}`)
       .limit(1)
       .maybeSingle();
+
+    if (!profileLookup?.username) {
+      const { data: exactName } = await supabase
+        .from('profiles')
+        .select('username')
+        .ilike('nama', finalUsername)
+        .limit(1)
+        .maybeSingle();
+      profileLookup = exactName;
+    }
+
+    if (!profileLookup?.username) {
+      const { data: partialName } = await supabase
+        .from('profiles')
+        .select('username')
+        .ilike('nama', `%${finalUsername}%`)
+        .limit(1)
+        .maybeSingle();
+      profileLookup = partialName;
+    }
 
     if (profileLookup?.username) {
       finalUsername = profileLookup.username;
     }
-    const email = `${finalUsername}@smkn1sorong.sch.id`;
-    
-    // DEBUG BACKDOOR (Bypass Auth & Supabase RLS issue mitigation for Demo)
-    if (password === 'Demo@2025' || password === 'Demo@2025 ') {
-      // Because Supabase GoTrue auth inserts can be tricky manually,
-      // we provide a robust fallback that allows login if the profile exists.
-      // NOTE: This uses mockLogin, which might fail RLS if not careful,
-      // but is an essential fallback if SQL wasn't run or failed.
-      if (profileLookup && profileLookup.username) {
-         const { data: fullProfile } = await supabase.from('profiles').select('*, kelas:kelas_id(id, nama)').eq('username', finalUsername).single();
-         if (fullProfile) {
-           mockLogin(fullProfile);
-           return { profile: fullProfile, error: null };
-         }
-      }
-    }
 
+    const email = `${finalUsername}@smkn1sorong.sch.id`;
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error || !data.user) {
-      console.error("Login failed for email:", email, "Error:", error?.message);
-      const msg = `Gagal masuk (${error?.message || 'Tidak ada akses'}). Pastikan akun sudah dibuat via SQL Editor.`;
+      const msg = `Gagal masuk (${error?.message || 'Tidak ada akses'}). Pastikan akun sudah dibuat.`;
       setState(prev => ({ ...prev, loading: false, error: msg }));
       return { profile: null, error: msg };
     }
@@ -92,10 +98,6 @@ export function useAuth() {
     const profile = await loadProfile(data.user.id);
     return { profile, error: null };
   }, [loadProfile]);
-  
-  const mockLogin = useCallback((profileData: any) => {
-    setState({ profile: profileData, loading: false, error: null });
-  }, []);
 
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
@@ -114,9 +116,17 @@ export function useAuth() {
     return null;
   }, [loadProfile]);
 
-  const userRole: UserRole | null = state.profile
-    ? (state.profile.is_sekretaris ? 'sekretaris' : state.profile.role as UserRole)
-    : null;
+  // 6-tier role mapping
+  const resolveRole = (profile: Profile): UserRole => {
+    if (profile.role === 'operator') return 'operator';
+    if (profile.role === 'guru_piket') return 'guru_piket';
+    if (profile.role === 'wali_kelas') return 'wali_kelas';
+    if (profile.role === 'guru') return 'guru';
+    if (profile.is_sekretaris) return 'sekretaris';
+    return 'siswa';
+  };
+
+  const userRole: UserRole | null = state.profile ? resolveRole(state.profile) : null;
 
   return {
     profile: state.profile,
@@ -124,7 +134,6 @@ export function useAuth() {
     loading: state.loading,
     error: state.error,
     login,
-    mockLogin,
     logout,
     changePassword,
     isLoggedIn: !!state.profile,

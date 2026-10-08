@@ -102,7 +102,7 @@ export const StudentCard: React.FC<Props> = ({
           <div
             className={`w-10 h-10 rounded-full font-bold flex items-center justify-center font-heading text-lg shrink-0 ${getAvatarStyle()}`}
           >
-            {student.absentNo}
+            {student.absentNo ?? student.studentNo ?? '??'}
           </div>
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">

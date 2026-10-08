@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, Send } from 'lucide-react';
 
 interface Props {
   readOnly?: boolean;
+  classTitle?: string;
   students: Student[];
   onUpdateStudentStatus: (studentId: string, status: AttendanceStatus) => void;
 
@@ -19,6 +20,7 @@ interface Props {
 
 export const AttendanceScreen: React.FC<Props> = ({
   readOnly = false,
+  classTitle,
   students,
   onUpdateStudentStatus,
 
@@ -55,7 +57,7 @@ export const AttendanceScreen: React.FC<Props> = ({
       const matchSearch =
         !query ||
         student.name.toLowerCase().includes(query) ||
-        student.absentNo.includes(query) ||
+        (student.absentNo ?? student.studentNo ?? '').includes(query) ||
         student.nisn.includes(query);
 
       if (!matchSearch) return false;
@@ -90,7 +92,7 @@ export const AttendanceScreen: React.FC<Props> = ({
           {/* Active Ping Pill */}
           <div className="bg-white/15 backdrop-blur-md px-3 py-1 rounded-full flex items-center gap-1.5 border border-white/20">
             <span className="w-2 h-2 rounded-full bg-[#d2e4ff] animate-ping"></span>
-            <span className="text-[11px] font-bold text-white">XII TKJ 1 (34)</span>
+            <span className="text-[11px] font-bold text-white">{classTitle || 'Kelas'} ({students.length})</span>
           </div>
         </div>
 

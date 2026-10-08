@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserProfile, StudentAttendance, ClassAttendanceSummary, TeacherCallAlert } from '../types_samakan';
+import { UserProfile, StudentAttendance, ClassAttendanceSummary, TeacherCallAlert } from '../types';
 
 interface AbsensiScreenProps {
   user: UserProfile;

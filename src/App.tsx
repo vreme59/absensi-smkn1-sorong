@@ -17,20 +17,23 @@ import { JadwalScreen } from './components/JadwalScreen';
 import { ProfileScreen } from './components/ProfileScreenSamakan';
 import { EditProfileScreen } from './components/EditProfileScreen';
 import { ChangePasswordScreen } from './components/ChangePasswordScreen';
-import { ClassAttendanceSummary, StudentAttendance, TeacherCallAlert, UserRole } from './types_samakan';
+import { ClassAttendanceSummary, StudentAttendance, TeacherCallAlert, UserRole } from './types';
 import { useAuth } from './hooks/useAuth';
 
 // Old Attendance Screen
 import { AttendanceScreen } from './components/AttendanceScreen';
 import { SubmitModal } from './components/SubmitModal';
 import { AttachmentModal } from './components/AttachmentModal';
+import { ValidasiGuruScreen } from './components/ValidasiGuruScreen';
+import { WaliKelasDashboard } from './components/WaliKelasDashboard';
+import { GuruPiketDashboard } from './components/GuruPiketDashboard';
 
 export default function App() {
   const auth = useAuth();
 
   // --- UI State ---
   const [isGuestPublic, setIsGuestPublic] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'beranda' | 'jadwal' | 'absensi' | 'profil' | 'edit-profil' | 'ganti-password'>('beranda');
+  const [currentTab, setCurrentTab] = useState<'beranda' | 'jadwal' | 'absensi' | 'profil' | 'edit-profil' | 'ganti-password' | 'wali-kelas' | 'guru-piket'>('beranda');
   const [toast, setToast] = useState<ToastData | null>(null);
   
   // Samakan state
@@ -68,10 +71,12 @@ export default function App() {
         avatarUrl: auth.profile.avatar_url || (USER_PROFILES[supabaseRole] ?? USER_PROFILES.siswa).avatarUrl,
         role: supabaseRole,
         roleTitle:
-          supabaseRole === 'guru' ? 'Guru Mata Pelajaran'
-          : supabaseRole === 'admin' ? 'Administrator Sekolah'
-          : supabaseRole === 'sekretaris' ? `Sekretaris Kelas`
-          : `Siswa`,
+          supabaseRole === 'operator' ? 'Administrator Sekolah'
+          : supabaseRole === 'guru_piket' ? 'Guru Piket'
+          : supabaseRole === 'wali_kelas' ? 'Wali Kelas'
+          : supabaseRole === 'guru' ? 'Guru Mata Pelajaran'
+          : supabaseRole === 'sekretaris' ? 'Sekretaris Kelas'
+          : 'Siswa',
         identifier: auth.profile.username,
         kelas_id: auth.profile.kelas_id || 'e88128be-8fc3-4973-8d69-00ef17571626',
         kelas: (auth.profile as any).kelas || { id: 'e88128be-8fc3-4973-8d69-00ef17571626', nama: 'XII TKJ 1' },
@@ -82,38 +87,60 @@ export default function App() {
         kelas: { id: 'e88128be-8fc3-4973-8d69-00ef17571626', nama: 'XII TKJ 1' },
       };
 
-  const handleLogin = async (role: UserRole, identifier?: string, password?: string) => {
+  // Load real students for currentUser.kelas_id
+  React.useEffect(() => {
+    const targetKelasId = currentUser.kelas_id;
+    if (!targetKelasId) return;
+
+    async function loadClassStudents() {
+      const { data: dbStudents } = await supabase
+        .from('profiles')
+        .select('id, nama, username')
+        .eq('kelas_id', targetKelasId)
+        .eq('role', 'siswa')
+        .order('nama', { ascending: true });
+
+      if (dbStudents && dbStudents.length > 0) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const { data: todayAbsen } = await supabase
+          .from('absen_harian')
+          .select('siswa_id, status, keterangan')
+          .eq('kelas_id', targetKelasId)
+          .eq('tanggal', todayStr);
+
+        const statusMap: Record<string, any> = {};
+        (todayAbsen || []).forEach((a: any) => {
+          const s = a.status === 'Hadir' ? 'H' : a.status === 'Sakit' ? 'S' : a.status === 'Izin' ? 'I' : a.status === 'Bolos' ? 'B' : 'A';
+          statusMap[a.siswa_id] = { status: s, note: a.keterangan };
+        });
+
+        const mapped: Student[] = dbStudents.map((s, idx) => {
+          const numStr = String(idx + 1).padStart(2, '0');
+          const existing = statusMap[s.id];
+          return {
+            id: s.id,
+            absentNo: numStr,
+            name: s.nama,
+            studentNo: numStr,
+            nisn: s.username.replace(/^s_?/, ''),
+            status: existing ? existing.status : 'H',
+            note: existing?.note || undefined,
+            avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(s.nama)}&background=005fa0&color=fff`,
+          };
+        });
+
+        setOldStudents(mapped);
+      }
+    }
+
+    loadClassStudents();
+  }, [currentUser.kelas_id]);
+
+  const handleLogin = async (_role: UserRole, identifier?: string, password?: string) => {
     if (!identifier || !password) return;
     setLoginError(null);
-    
-    // DEBUG BYPASS LOGIC
-    if (identifier === 'Bypass Guru') {
-      auth.mockLogin({ role: 'guru', name: 'Bapak Haris Titirloloby', roleTitle: 'Guru Produktif', identifier: 'Bypass Guru' });
-      setCurrentTab('beranda');
-      showToast('Mode Debug', 'Masuk sebagai Guru', 'info');
-      return;
-    }
-    if (identifier === 'Bypass Siswa') {
-      auth.mockLogin({ role: 'siswa', name: 'Alif Naufal', roleTitle: 'Siswa', kelas_id: 'e88128be-8fc3-4973-8d69-00ef17571626', kelas: { nama: 'XII TKJ 1' } });
-      setCurrentTab('beranda');
-      showToast('Mode Debug', 'Masuk sebagai Siswa', 'info');
-      return;
-    }
 
-          if (password === 'BYPASS_TOKEN') {
-        const { data: profiles } = await supabase.from('profiles').select('*, kelas:kelas_id(id, nama)').or(`username.eq.${identifier},nama.ilike.%${identifier}%`);
-        const profile = profiles && profiles.length > 0 ? profiles[0] : null;
-        if (profile) {
-          auth.mockLogin(profile);
-          setCurrentTab('beranda');
-          showToast('Bypass Sukses', 'Berhasil masuk sebagai ' + profile.nama, 'success');
-        } else {
-          setLoginError(`Profile '${identifier}' tidak ditemukan di database.`);
-        }
-        return;
-      }
-
-      const result = await auth.login(identifier, password);
+    const result = await auth.login(identifier, password);
     if (result.error) {
       setLoginError(result.error);
     } else {
@@ -165,9 +192,32 @@ export default function App() {
     showToast('Tersimpan', 'Draft presensi berhasil disimpan secara lokal (Offline)!', 'success');
   };
 
-  const handleConfirmSubmit = () => {
+  const handleConfirmSubmit = async () => {
     localStorage.setItem('smkn1_attendance_students_v2', JSON.stringify(oldStudents));
     setIsSubmitModalOpen(false);
+
+    try {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const targetKelasId = currentUser.kelas_id;
+      if (targetKelasId) {
+        const rows = oldStudents.map(s => {
+          const dbStatus = s.status === 'H' ? 'Hadir' : s.status === 'S' ? 'Sakit' : s.status === 'I' ? 'Izin' : s.status === 'B' ? 'Bolos' : 'Alfa';
+          return {
+            tanggal: todayStr,
+            siswa_id: s.id,
+            kelas_id: targetKelasId,
+            status: dbStatus,
+            keterangan: s.note || null,
+            diinput_oleh: currentUser.id,
+            status_validasi: 'draft' as const
+          };
+        });
+        await supabase.from('absen_harian').upsert(rows, { onConflict: 'tanggal,siswa_id' });
+      }
+    } catch (e) {
+      console.error('Error saving absen_harian:', e);
+    }
+
     showToast('Berhasil', 'Draft berhasil dikirim untuk validasi!', 'success');
   };
 
@@ -224,7 +274,15 @@ export default function App() {
   // --- Main App ---
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-surface flex flex-col justify-between font-body text-on-surface">
-      {currentTab !== 'edit-profil' && currentTab !== 'ganti-password' && <Navbar currentTab={currentTab} user={currentUser} onSelectRole={() => {}} onOpenHtmlModal={() => {}} />}
+      {currentTab !== 'edit-profil' && currentTab !== 'ganti-password' && (
+        <Navbar
+          currentTab={currentTab}
+          user={currentUser}
+          onSelectRole={() => {}}
+          onOpenHtmlModal={() => {}}
+          onNavigateToTab={(tab) => setCurrentTab(tab as any)}
+        />
+      )}
 
       {isGuestPublic && (
         <div className="fixed top-16 left-0 right-0 z-30 bg-amber-500 text-amber-950 px-4 py-1.5 text-xs font-bold flex items-center justify-between shadow-sm">
@@ -257,6 +315,7 @@ export default function App() {
               <div className="w-full max-w-md mx-auto pb-20">
                 <AttendanceScreen
                   readOnly={true}
+                  classTitle={currentUser.kelas?.nama}
                   students={oldStudents}
                   onUpdateStudentStatus={handleUpdateStudentStatus}
 
@@ -276,32 +335,31 @@ export default function App() {
                 />
               </div>
             ) : (
-            <div className="w-full max-w-md mx-auto pb-20">
-              <AttendanceScreen
-                students={oldStudents}
-                onUpdateStudentStatus={handleUpdateStudentStatus}
-
-                onOpenSubmitModal={() => setIsSubmitModalOpen(true)}
-                onSaveOfflineDraft={handleSaveOfflineDraft}
-                onViewAttachment={(student) => {
-                  setSelectedStudentForAttachment(student);
-                  setAttachmentModalMode('view');
-                }}
-                onEditNote={(student) => {
-                  setSelectedStudentForAttachment(student);
-                  setAttachmentModalMode('edit');
-                }}
-                isDraftSavedOffline={isDraftSavedOffline}
-                onNavigateHome={() => setCurrentTab('beranda')}
-                containerWidthClass="max-w-md mx-auto"
-              />
-            </div>
+            <ValidasiGuruScreen
+              user={currentUser}
+              onShowToast={showToast}
+            />
           )
         )}
 
+        {currentTab === 'wali-kelas' && (
+          <WaliKelasDashboard
+            user={currentUser}
+            onNavigateHome={() => setCurrentTab('beranda')}
+            onShowToast={showToast}
+          />
+        )}
+
+        {currentTab === 'guru-piket' && (
+          <GuruPiketDashboard
+            user={currentUser}
+            onNavigateHome={() => setCurrentTab('beranda')}
+            onShowToast={showToast}
+          />
+        )}
 
         {currentTab === 'edit-profil' && (
-          <EditProfileScreen onBack={() => setCurrentTab('profil')} user={currentUser} onProfileUpdated={() => window.location.reload()} />
+          <EditProfileScreen onBack={() => setCurrentTab('profil')} user={currentUser} onProfileUpdated={() => { if (auth.profile) { /* refetch handled by auth state */ } }} />
         )}
         {currentTab === 'profil' && (
           <ProfileScreen

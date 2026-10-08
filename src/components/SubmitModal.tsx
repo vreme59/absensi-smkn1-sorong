@@ -118,7 +118,7 @@ export const SubmitModal: React.FC<Props> = ({
                 <div>
                   <span className="font-bold block">Peringatan Siswa Bolos Terdeteksi:</span>
                   <span>
-                    {bolosStudents.map(b => `${b.name} (Absen ${b.absentNo})`).join(', ')}. Sistem akan secara otomatis meneruskan notifikasi khusus ke Guru BK dan Wali Kelas.
+                    {bolosStudents.map(b => `${b.name} (Absen ${b.absentNo ?? b.studentNo ?? '??'})`).join(', ')}. Sistem akan secara otomatis meneruskan notifikasi khusus ke Guru BK dan Wali Kelas.
                   </span>
                 </div>
               </div>

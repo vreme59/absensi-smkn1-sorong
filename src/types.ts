@@ -1,11 +1,11 @@
-export type UserRole = 'siswa' | 'sekretaris' | 'guru' | 'admin';
+export type UserRole = 'siswa' | 'sekretaris' | 'guru' | 'wali_kelas' | 'guru_piket' | 'operator';
 
 export interface UserProfile {
   id: string;
   name: string;
   role: UserRole;
   roleTitle: string;
-  identifier: string; // NISN or NIP
+  identifier: string;
   classRoom?: string;
   homeroomTeacher?: string;
   avatarUrl: string;
@@ -13,6 +13,9 @@ export interface UserProfile {
   isAtSchool: boolean;
   attendanceRate: number;
   streakDays: number;
+  phone?: string;
+  kelas_id?: string;
+  kelas?: { id: string; nama: string };
 }
 
 export interface ScheduleItem {

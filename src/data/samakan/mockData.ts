@@ -1,4 +1,4 @@
-import { UserProfile, StudentAttendance, ClassAttendanceSummary, TeacherCallAlert } from '../types';
+import { UserProfile, StudentAttendance, ClassAttendanceSummary, TeacherCallAlert } from '../../types';
 
 export const SCHOOL_LOGO = '/logo-smk.png';
 
@@ -50,10 +50,10 @@ export const USER_PROFILES: Record<string, UserProfile> = {
     attendanceRate: 100,
     streakDays: 45,
   },
-  admin: {
+  operator: {
     id: 'user-admin',
     name: 'Admin Kurikulum & Dapodik',
-    role: 'admin',
+    role: 'operator',
     roleTitle: 'Administrator Utama SMKN 1',
     identifier: 'admin.kurikulum',
     classRoom: 'Pusat Kontrol Sekolah',

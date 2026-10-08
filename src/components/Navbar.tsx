@@ -1,28 +1,32 @@
 import React, { useState } from 'react';
 import { SCHOOL_LOGO } from '../data/samakan/mockData';
-import { UserProfile, UserRole } from '../types_samakan';
+import { UserProfile, UserRole } from '../types';
 
 interface NavbarProps {
   currentTab: string;
   user: UserProfile;
   onSelectRole: (role: UserRole) => void;
   onOpenHtmlModal: () => void;
+  onNavigateToTab?: (tab: string) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentTab,
   user,
-  onSelectRole,
-  onOpenHtmlModal,
+  onNavigateToTab,
 }) => {
   const [showRoleMenu, setShowRoleMenu] = useState(false);
 
   const tabLabels: Record<string, string> = {
     beranda: 'Beranda',
     jadwal: 'Jadwal',
-    absensi: user.role === 'guru' ? 'Portal Pendidik' : 'Absensi',
+    absensi: user.role === 'guru' ? 'Validasi Mapel' : 'Absensi',
     profil: 'Profil Pengguna',
+    'wali-kelas': 'Wali Kelas',
+    'guru-piket': 'Guru Piket',
   };
+
+  const isTeacherTier = user.role === 'guru' || user.role === 'wali_kelas' || user.role === 'guru_piket';
 
   return (
     <header className="fixed top-0 w-full z-40 bg-primary pt-safe shadow-[0_4px_16px_rgba(0,95,160,0.18)]">
@@ -47,7 +51,71 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
+        {/* Right: Teacher Role Context Switcher */}
+        {isTeacherTier && onNavigateToTab && (
+          <div className="relative">
+            <button
+              onClick={() => setShowRoleMenu(!showRoleMenu)}
+              className="bg-white/15 hover:bg-white/25 text-white px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 backdrop-blur-md border border-white/20 transition active:scale-95"
+            >
+              <span className="material-symbols-outlined notranslate text-[16px]">
+                {currentTab === 'wali-kelas' ? 'supervisor_account' : currentTab === 'guru-piket' ? 'security' : 'school'}
+              </span>
+              <span className="text-[11px]">
+                {currentTab === 'wali-kelas' ? 'Wali Kelas' : currentTab === 'guru-piket' ? 'Guru Piket' : 'Guru Mapel'}
+              </span>
+              <span className="material-symbols-outlined notranslate text-[14px]">
+                expand_more
+              </span>
+            </button>
+
+            {/* Dropdown Menu */}
+            {showRoleMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 p-1.5 z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-150">
+                <p className="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Beralih Workspace:
+                </p>
+                <button
+                  onClick={() => {
+                    onNavigateToTab('absensi');
+                    setShowRoleMenu(false);
+                  }}
+                  className={`w-full px-2.5 py-2 text-left rounded-xl text-xs font-bold flex items-center gap-2 transition ${
+                    currentTab === 'absensi' ? 'bg-primary text-white' : 'hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="material-symbols-outlined notranslate text-[16px]">verified</span>
+                  <span>Guru Mata Pelajaran</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigateToTab('wali-kelas');
+                    setShowRoleMenu(false);
+                  }}
+                  className={`w-full px-2.5 py-2 text-left rounded-xl text-xs font-bold flex items-center gap-2 transition ${
+                    currentTab === 'wali-kelas' ? 'bg-primary text-white' : 'hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="material-symbols-outlined notranslate text-[16px]">supervisor_account</span>
+                  <span>Dashboard Wali Kelas</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigateToTab('guru-piket');
+                    setShowRoleMenu(false);
+                  }}
+                  className={`w-full px-2.5 py-2 text-left rounded-xl text-xs font-bold flex items-center gap-2 transition ${
+                    currentTab === 'guru-piket' ? 'bg-primary text-white' : 'hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="material-symbols-outlined notranslate text-[16px]">security</span>
+                  <span>Portal Live Guru Piket</span>
+                </button>
               </div>
+            )}
+          </div>
+        )}
+      </div>
     </header>
   );
 };

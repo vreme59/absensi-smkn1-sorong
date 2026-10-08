@@ -141,7 +141,7 @@ export default function App() {
     return students.filter(s => {
       const matchQuery =
         s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.absentNo.includes(searchQuery) ||
+        (s.absentNo ?? s.studentNo ?? '').includes(searchQuery) ||
         s.nisn.includes(searchQuery);
 
       if (!matchQuery) return false;
@@ -639,7 +639,7 @@ export const StudentCard: React.FC<StudentCardProps> = ({ student, onStatusChang
       <View style={styles.topRow}>
         <View style={styles.leftInfo}>
           <View style={[styles.avatarNo, { backgroundColor: numColor.bg }]}>
-            <Text style={[styles.avatarText, { color: numColor.text }]}>{student.absentNo}</Text>
+            <Text style={[styles.avatarText, { color: numColor.text }]}>{student.absentNo ?? student.studentNo ?? '??'}</Text>
           </View>
           <View>
             <View style={styles.nameRow}>

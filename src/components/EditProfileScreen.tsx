@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { UserProfile } from '../types_samakan';
+import { UserProfile } from '../types';
 
 // Fallback high-quality avatar if network image is blocked
 const FALLBACK_AVATAR =

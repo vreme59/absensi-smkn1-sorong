@@ -1,15 +1,9 @@
-// src/lib/supabase.ts
-// Supabase client untuk project React "pakai ini"
-// anon key = AMAN di frontend (public key)
-// JANGAN masukkan service_role key di sini
-
 import { createClient } from '@supabase/supabase-js';
 
-export const SUPABASE_URL = 'https://cfcdqmajoazxcoxgnoka.supabase.co';
-export const SUPABASE_ANON_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmY2RxbWFqb2F6eGNveGdub2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3NjUzNzEsImV4cCI6MjEwNjM0MTM3MX0.wLxxXMBd0q8HZM0HGhfGb0yMuA-a3daofIHMK8Bxjmc';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://cfcdqmajoazxcoxgnoka.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmY2RxbWFqb2F6eGNveGdub2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA3NjUzNzEsImV4cCI6MjEwNjM0MTM3MX0.wLxxXMBd0q8HZM0HGhfGb0yMuA-a3daofIHMK8Bxjmc';
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
@@ -22,7 +16,7 @@ export type StatusAbsen = 'Hadir' | 'Izin' | 'Sakit' | 'Alfa' | 'Terlambat';
 export type StatusValidasi = 'draft' | 'tervalidasi';
 export type StatusStreak = 'aktif' | 'padam' | 'beku';
 export type HariEnum = 'Senin' | 'Selasa' | 'Rabu' | 'Kamis' | 'Jumat' | 'Sabtu';
-export type RoleEnum = 'admin' | 'guru' | 'siswa';
+export type RoleEnum = 'siswa' | 'guru' | 'wali_kelas' | 'guru_piket' | 'operator';
 
 export interface Profile {
   id: string;
@@ -32,6 +26,8 @@ export interface Profile {
   is_sekretaris: boolean;
   kelas_id: string | null;
   must_change_password: boolean;
+  phone?: string;
+  avatar_url?: string;
   kelas?: { id: string; nama: string } | null;
 }
 
@@ -52,7 +48,7 @@ export interface Jadwal {
   mapel_id: string;
   guru_id: string;
   hari: HariEnum;
-  jam_mulai: string; // 'HH:MM:SS'
+  jam_mulai: string;
   jam_selesai: string;
   kelas?: { id: string; nama: string };
   mapel?: { id: string; nama: string };
@@ -61,7 +57,7 @@ export interface Jadwal {
 
 export interface AbsenHarian {
   id: string;
-  tanggal: string; // 'YYYY-MM-DD'
+  tanggal: string;
   siswa_id: string;
   kelas_id: string;
   status: StatusAbsen;

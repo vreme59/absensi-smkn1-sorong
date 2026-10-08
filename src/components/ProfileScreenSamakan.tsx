@@ -1,21 +1,17 @@
 import React, { useState } from 'react';
-import { UserProfile, UserRole } from '../types_samakan';
+import { UserProfile, UserRole } from '../types';
 
 interface ProfileScreenProps {
   onEditProfile?: () => void;
   onChangePassword?: () => void;
   user: UserProfile;
-  onSelectRole: (role: UserRole) => void;
   onLogout: () => void;
-  onOpenHtmlModal: () => void;
   onShowToast: (title: string, desc: string, type?: 'success' | 'warning' | 'info') => void;
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   user,
-  onSelectRole,
   onLogout,
-  onOpenHtmlModal,
   onShowToast,
   onEditProfile,
   onChangePassword

@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import React, { useState, useEffect } from 'react';
 import { SCHEDULES_BY_DAY } from "../data/samakan/scheduleData";
-import { UserProfile, StudentAttendance, ClassAttendanceSummary, TeacherCallAlert } from '../types_samakan';
+import { UserProfile, StudentAttendance, ClassAttendanceSummary, TeacherCallAlert } from '../types';
 
 interface HomeScreenProps {
   user: UserProfile;
@@ -27,9 +27,6 @@ export const HomeScreenGuru: React.FC<HomeScreenProps> = ({ user, onNavigateToTa
       try {
         const hariNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         let currentDayIndex = currentTime.getDay();
-        if ((window as any).DEBUG_DAY_INDEX !== undefined) {
-          currentDayIndex = ((window as any).DEBUG_DAY_INDEX === 6) ? 0 : (window as any).DEBUG_DAY_INDEX + 1;
-        }
         const hariIni = hariNames[currentDayIndex];
         const nowMin = currentTime.getHours() * 60 + currentTime.getMinutes();
 
@@ -75,22 +72,14 @@ export const HomeScreenGuru: React.FC<HomeScreenProps> = ({ user, onNavigateToTa
         const currentActive = grouped.find(g => nowMin >= g.startMin && nowMin < g.endMin);
         setIsMengajar(!!currentActive);
 
-      } catch (err) {}
+      } catch (err) { console.error('Failed to fetch schedule:', err); }
     }
     fetchSisaKelas();
   }, [user.id, currentTime]);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      const dbgTime = (window as any).DEBUG_TIME;
-      if (dbgTime) {
-        const [h, m] = dbgTime.split(':');
-        const d = new Date();
-        d.setHours(parseInt(h, 10), parseInt(m, 10), 0);
-        setCurrentTime(d);
-      } else {
-        setCurrentTime(new Date());
-      }
+      setCurrentTime(new Date());
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -105,52 +94,6 @@ export const HomeScreenGuru: React.FC<HomeScreenProps> = ({ user, onNavigateToTa
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
         <div className="absolute top-1/2 -left-32 w-80 h-80 bg-sky-400/20 rounded-full blur-3xl"></div>
-
-        {/* DEBUG TIME WIDGET */}
-        <div className="relative z-20 bg-red-500/20 border border-red-400/30 backdrop-blur-sm rounded-lg p-2 mb-4 flex flex-col gap-2 text-white text-xs">
-           <span className="font-bold text-red-100 flex items-center gap-1">
-             <span className="material-symbols-outlined notranslate text-[14px]">bug_report</span> 
-             Alat Debugging (Simulator Waktu)
-           </span>
-           <div className="flex gap-2">
-             <select onChange={e => {
-               if (e.target.value === "") {
-                 (window as any).DEBUG_DAY_INDEX = undefined;
-               } else {
-                 (window as any).DEBUG_DAY_INDEX = Number(e.target.value);
-               }
-               // trigger a tiny re-render
-               const d = (window as any).DEBUG_TIME ? new Date() : new Date();
-               if ((window as any).DEBUG_TIME) {
-                 const [h, m] = (window as any).DEBUG_TIME.split(':');
-                 d.setHours(parseInt(h, 10), parseInt(m, 10), 0);
-               }
-               setCurrentTime(d);
-             }} className="bg-white/20 px-2 py-1.5 rounded text-white outline-none border border-white/20 focus:border-white flex-1 cursor-pointer">
-               <option value="" className="text-slate-900">Pilih Hari (Asli)</option>
-               <option value="0" className="text-slate-900">Senin</option>
-               <option value="1" className="text-slate-900">Selasa</option>
-               <option value="2" className="text-slate-900">Rabu</option>
-               <option value="3" className="text-slate-900">Kamis</option>
-               <option value="4" className="text-slate-900">Jumat</option>
-               <option value="5" className="text-slate-900">Sabtu</option>
-             </select>
-             
-             <input type="time" onChange={e => {
-               if (!e.target.value) {
-                 (window as any).DEBUG_TIME = null;
-                 setCurrentTime(new Date());
-               } else {
-                 (window as any).DEBUG_TIME = e.target.value;
-                 const [h,m] = e.target.value.split(':').map(Number);
-                 const d = new Date();
-                 d.setHours(h);
-                 d.setMinutes(m);
-                 setCurrentTime(d);
-               }
-             }} className="bg-white/20 px-2 py-1.5 rounded text-white outline-none border border-white/20 focus:border-white cursor-pointer" />
-           </div>
-        </div>
 
         <div className="relative z-10 flex justify-between items-start">
           <div className="flex gap-3 items-center">
@@ -248,34 +191,106 @@ export const HomeScreenGuru: React.FC<HomeScreenProps> = ({ user, onNavigateToTa
           <span className="text-primary text-[11px] font-bold cursor-pointer hover:underline">Lihat Semua</span>
         </div>
         {/* Quick Actions (4 Grid) */}
-        <div className="bg-white rounded-[24px] shadow-sm border border-slate-100 p-5 mt-2">
-          <h3 className="font-headline font-bold text-slate-800 text-sm mb-4">Menu Pintasan Guru</h3>
+        <div className="bg-white rounded-[24px] shadow-sm border border-slate-100 p-5 mt-1">
+          <h3 className="font-headline font-bold text-slate-800 text-sm mb-3">Menu Pintasan Guru</h3>
           <div className="grid grid-cols-4 gap-2">
-            <button className="flex flex-col items-center gap-2 group">
-              <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform">
+            <button
+              onClick={() => onNavigateToTab('absensi')}
+              className="flex flex-col items-center gap-1.5 group cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform border border-emerald-100 shadow-xs">
+                <span className="material-symbols-outlined notranslate">verified</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-700 text-center leading-tight">Validasi<br/>Mapel</span>
+            </button>
+            <button
+              onClick={() => onNavigateToTab('wali-kelas')}
+              className="flex flex-col items-center gap-1.5 group cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform border border-indigo-100 shadow-xs">
+                <span className="material-symbols-outlined notranslate">supervisor_account</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-700 text-center leading-tight">Wali<br/>Kelas</span>
+            </button>
+            <button
+              onClick={() => onNavigateToTab('guru-piket')}
+              className="flex flex-col items-center gap-1.5 group cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-amber-50 text-amber-700 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform border border-amber-100 shadow-xs">
+                <span className="material-symbols-outlined notranslate">security</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-700 text-center leading-tight">Guru<br/>Piket</span>
+            </button>
+            <button
+              onClick={() => onNavigateToTab('jadwal')}
+              className="flex flex-col items-center gap-1.5 group cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform border border-blue-100 shadow-xs">
                 <span className="material-symbols-outlined notranslate">calendar_month</span>
               </div>
-              <span className="text-[10px] font-bold text-slate-600 text-center leading-tight">Jadwal<br/>Mengajar</span>
-            </button>
-            <button className="flex flex-col items-center gap-2 group">
-              <div className="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform">
-                <span className="material-symbols-outlined notranslate">query_stats</span>
-              </div>
-              <span className="text-[10px] font-bold text-slate-600 text-center leading-tight">Rekap<br/>Kelas</span>
-            </button>
-            <button className="flex flex-col items-center gap-2 group">
-              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform">
-                <span className="material-symbols-outlined notranslate">mark_email_unread</span>
-              </div>
-              <span className="text-[10px] font-bold text-slate-600 text-center leading-tight">Surat<br/>Izin</span>
-            </button>
-            <button className="flex flex-col items-center gap-2 group">
-              <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform">
-                <span className="material-symbols-outlined notranslate">campaign</span>
-              </div>
-              <span className="text-[10px] font-bold text-slate-600 text-center leading-tight">Buat<br/>Pengumuman</span>
+              <span className="text-[10px] font-bold text-slate-700 text-center leading-tight">Jadwal<br/>Mengajar</span>
             </button>
           </div>
+        </div>
+
+        {/* Feature: Portal Wali Kelas Banner Card */}
+        <div
+          onClick={() => onNavigateToTab('wali-kelas')}
+          className="bg-gradient-to-r from-indigo-900 to-[#003d73] text-white rounded-[24px] p-4 shadow-sm border border-indigo-800/40 cursor-pointer hover:shadow-md transition active:scale-98"
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center backdrop-blur-md">
+                <span className="material-symbols-outlined notranslate text-white text-[22px]">
+                  supervisor_account
+                </span>
+              </div>
+              <div>
+                <span className="bg-indigo-400/30 text-indigo-200 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
+                  Peran Wali Kelas
+                </span>
+                <h4 className="font-headline font-bold text-sm text-white mt-0.5">
+                  Dashboard Khusus Wali Kelas
+                </h4>
+              </div>
+            </div>
+            <span className="material-symbols-outlined notranslate text-indigo-200 text-lg">
+              arrow_forward
+            </span>
+          </div>
+          <p className="text-indigo-100 text-xs mt-2 leading-relaxed">
+            Pantau kehadiran kelas perwalian, deteksi siswa rawan Alfa &ge; 3, dan terbitkan Surat Panggilan Orang Tua otomatis format resmi.
+          </p>
+        </div>
+
+        {/* Feature: Portal Guru Piket Banner Card */}
+        <div
+          onClick={() => onNavigateToTab('guru-piket')}
+          className="bg-gradient-to-r from-amber-800 to-amber-950 text-white rounded-[24px] p-4 shadow-sm border border-amber-700/40 cursor-pointer hover:shadow-md transition active:scale-98"
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center backdrop-blur-md">
+                <span className="material-symbols-outlined notranslate text-amber-300 text-[22px]">
+                  door_sliding
+                </span>
+              </div>
+              <div>
+                <span className="bg-amber-400/30 text-amber-200 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
+                  Piket Ketertiban
+                </span>
+                <h4 className="font-headline font-bold text-sm text-white mt-0.5">
+                  Portal Live Guru Piket
+                </h4>
+              </div>
+            </div>
+            <span className="material-symbols-outlined notranslate text-amber-200 text-lg">
+              arrow_forward
+            </span>
+          </div>
+          <p className="text-amber-100 text-xs mt-2 leading-relaxed">
+            Catat siswa terlambat di gerbang secara real-time dan pantau radar siswa bolos mapel dari seluruh 54 kelas serentak.
+          </p>
         </div>
         
       </div>
@@ -295,7 +310,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
   onNavigateToTab,
   onShowToast,
 }) => {
-  if (user.role === 'guru') {
+  if (user.role === 'guru' || user.role === 'wali_kelas' || user.role === 'guru_piket') {
     return <HomeScreenGuru user={user} onNavigateToTab={onNavigateToTab} onShowToast={onShowToast} classSummary={classSummary} students={students} teacherAlert={teacherAlert} onSendTeacherCall={onSendTeacherCall} onSubmitMorningDraft={onSubmitMorningDraft} />;
   }
 
@@ -355,11 +370,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
             .eq('tanggal', todayStr);
 
           if (mapelData && mapelData.length > 0) {
-            const studentStatusMap = {};
-            mapelData.forEach(r => {
+            const studentStatusMap: Record<string, string> = {};
+            mapelData.forEach((r: any) => {
               studentStatusMap[r.siswa_id] = r.status;
             });
-            Object.values(studentStatusMap).forEach(status => {
+            Object.values(studentStatusMap).forEach((status: string) => {
               if (status === 'Hadir' || status === 'Terlambat') h++;
               else if (status === 'Sakit') s++;
               else if (status === 'Izin') i++;
@@ -376,7 +391,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
         sick: s,
         permitted: i,
         unexcused: a,
-        validationStatus: harianData && harianData.length > 0 ? 'valid' : 'menunggu_acc'
+        validationStatus: harianData && harianData.length > 0 ? 'tervalidasi' : 'menunggu_acc'
       });
     }
 
@@ -400,15 +415,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      const dbgTime = (window as any).DEBUG_TIME;
-      if (typeof dbgTime === 'string' && dbgTime) {
-        const [h, m] = dbgTime.split(':');
-        const d = new Date();
-        d.setHours(parseInt(h, 10), parseInt(m, 10), 0);
-        setCurrentTime(d);
-      } else {
-        setCurrentTime(new Date());
-      }
+      setCurrentTime(new Date());
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -499,45 +506,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
     <div className="flex flex-col w-full max-w-md mx-auto pb-24">
       {/* DANA Style Top Surface Background Extension */}
       <div className="bg-primary pt-3 pb-10 px-4 relative overflow-hidden rounded-b-[28px] shadow-[0_12px_32px_rgba(0,95,160,0.18)]">
-                {/* DEBUG TIME WIDGET */}
-        <div className="relative z-20 bg-red-500/20 border border-red-400/30 backdrop-blur-sm rounded-lg p-2 mb-3 flex flex-col gap-2 text-white text-xs">
-           <span className="font-bold text-red-100 flex items-center gap-1">
-             <span className="material-symbols-outlined notranslate text-[14px]">bug_report</span> 
-             Alat Debugging (Simulator Waktu)
-           </span>
-           <div className="flex gap-2">
-             <select onChange={e => {
-               if (e.target.value === "") {
-                 (window as any).DEBUG_DAY_INDEX = undefined;
-               } else {
-                 (window as any).DEBUG_DAY_INDEX = Number(e.target.value);
-               }
-               // trigger a tiny re-render
-               setCurrentTime(new Date((window as any).DEBUG_TIME || new Date()));
-             }} className="bg-white/20 px-2 py-1.5 rounded text-white outline-none border border-white/20 focus:border-white flex-1 cursor-pointer">
-               <option value="" className="text-slate-900">Pilih Hari (Asli)</option>
-               <option value="0" className="text-slate-900">Senin</option>
-               <option value="1" className="text-slate-900">Selasa</option>
-               <option value="2" className="text-slate-900">Rabu</option>
-               <option value="3" className="text-slate-900">Kamis</option>
-               <option value="4" className="text-slate-900">Jumat</option>
-               <option value="5" className="text-slate-900">Sabtu</option>
-             </select>
-             
-             <input type="time" onChange={e => {
-               if (!e.target.value) {
-                 (window as any).DEBUG_TIME = null;
-               } else {
-                 const [h,m] = e.target.value.split(':').map(Number);
-                 const d = new Date();
-                 d.setHours(h);
-                 d.setMinutes(m);
-                 (window as any).DEBUG_TIME = d;
-                 setCurrentTime(d);
-               }
-             }} className="bg-white/20 px-2 py-1.5 rounded text-white outline-none border border-white/20 focus:border-white flex-1" />
-           </div>
-        </div>
         {/* Fluid Curved Accent Elements */}
         <div className="absolute -right-12 -top-12 w-48 h-48 rounded-full bg-white/10 blur-xl pointer-events-none"></div>
         <div className="absolute -left-16 bottom-0 w-40 h-40 rounded-full bg-secondary-fixed/15 blur-lg pointer-events-none"></div>
@@ -922,7 +890,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
                     noteColor = 'text-orange-800';
                   }
 
-                  const initials = s.name.split(' ').map(n => n[0]).slice(0, 2).join('');
+                  const initials = s.name.split(' ').map((n: string) => n[0]).slice(0, 2).join('');
 
                   return (
                     <div key={s.id} className={`p-2.5 rounded-xl ${bgColor} border ${borderColor} flex items-center justify-between`}>
@@ -1203,9 +1171,6 @@ export const LiveSessionCard: React.FC<{ user: any, currentTime: Date, onShowToa
       try {
         const hariNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         let currentDayIndex = currentTime.getDay();
-        if ((window as any).DEBUG_DAY_INDEX !== undefined) {
-          currentDayIndex = ((window as any).DEBUG_DAY_INDEX === 6) ? 0 : (window as any).DEBUG_DAY_INDEX + 1;
-        }
         const hariIni = hariNames[currentDayIndex];
         const nowMin = currentTime.getHours() * 60 + currentTime.getMinutes();
 
