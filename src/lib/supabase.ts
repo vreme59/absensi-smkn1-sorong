@@ -29,6 +29,9 @@ export interface Profile {
   phone?: string;
   avatar_url?: string;
   kelas?: { id: string; nama: string } | null;
+  is_wali_kelas?: boolean;
+  wali_kelas?: { id: string; nama: string } | null;
+  is_guru_piket?: boolean;
 }
 
 export interface Kelas {

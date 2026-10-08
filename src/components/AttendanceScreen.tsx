@@ -3,8 +3,21 @@ import { Student, AttendanceStatus } from '../types/attendance';
 import { StudentCard } from './StudentCard';
 import { ChevronDown, ChevronUp, Send } from 'lucide-react';
 
+export interface OfficerInfo {
+  canInput: boolean;
+  officerRole: 'sekretaris' | 'ketua_kelas' | 'mandat_wali' | 'siswa_biasa';
+  title: string;
+  name: string;
+  reason: string;
+  isDelegated: boolean;
+  hierarchyStep: 1 | 2 | 3 | 4;
+  sekretarisAbsent?: boolean;
+  ketuaAbsent?: boolean;
+}
+
 interface Props {
   readOnly?: boolean;
+  officerInfo?: OfficerInfo;
   classTitle?: string;
   students: Student[];
   onUpdateStudentStatus: (studentId: string, status: AttendanceStatus) => void;
@@ -20,6 +33,7 @@ interface Props {
 
 export const AttendanceScreen: React.FC<Props> = ({
   readOnly = false,
+  officerInfo,
   classTitle,
   students,
   onUpdateStudentStatus,
@@ -109,8 +123,62 @@ export const AttendanceScreen: React.FC<Props> = ({
         </div>
       </div>
 
+      {/* Officer Delegation Banner */}
+      {officerInfo && (
+        <div className="px-4 -mt-1 mb-2">
+          <div
+            className={`rounded-2xl p-3 border shadow-xs flex items-start gap-2.5 ${
+              officerInfo.officerRole === 'sekretaris'
+                ? 'bg-blue-50/95 border-blue-200 text-blue-950'
+                : officerInfo.officerRole === 'ketua_kelas'
+                ? 'bg-amber-50/95 border-amber-200 text-amber-950'
+                : officerInfo.officerRole === 'mandat_wali'
+                ? 'bg-emerald-50/95 border-emerald-200 text-emerald-950'
+                : 'bg-slate-100/95 border-slate-200 text-slate-800'
+            }`}
+          >
+            <span
+              className={`material-symbols-outlined notranslate text-[22px] shrink-0 mt-0.5 ${
+                officerInfo.officerRole === 'sekretaris'
+                  ? 'text-[#005fa0]'
+                  : officerInfo.officerRole === 'ketua_kelas'
+                  ? 'text-amber-600'
+                  : officerInfo.officerRole === 'mandat_wali'
+                  ? 'text-emerald-600'
+                  : 'text-slate-500'
+              }`}
+            >
+              {officerInfo.officerRole === 'sekretaris'
+                ? 'verified'
+                : officerInfo.officerRole === 'ketua_kelas'
+                ? 'swap_horiz'
+                : officerInfo.officerRole === 'mandat_wali'
+                ? 'star'
+                : 'visibility'}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-xs font-bold font-heading">
+                  {officerInfo.canInput
+                    ? `Wewenang Anda: ${officerInfo.title}`
+                    : `Petugas Hari Ini: ${officerInfo.name}`}
+                </span>
+                {officerInfo.isDelegated && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase bg-amber-200/70 text-amber-900 shrink-0">
+                    Delegasi Aktif
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] leading-relaxed mt-0.5 opacity-90">
+                {officerInfo.reason}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Floating Card: Rekap Data Real-Time */}
-      <div className="px-4 -mt-4">
+      <div className="px-4 -mt-2">
         <div className="bg-white rounded-2xl p-3.5 shadow-[0_8px_24px_rgba(0,95,160,0.08)] border border-slate-100 flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
@@ -269,7 +337,25 @@ export const AttendanceScreen: React.FC<Props> = ({
         )}
       </div>
 
-      {!readOnly && (
+      {readOnly ? (
+        <div
+          className={`fixed bottom-16 left-1/2 -translate-x-1/2 w-full ${containerWidthClass} z-40 bg-white/95 backdrop-blur-md px-4 py-3 shadow-[0_-8px_24px_rgba(0,95,160,0.12)] border-t border-slate-200/90 transition-all`}
+        >
+          <div className="flex items-center gap-2.5 text-slate-700">
+            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0 text-slate-500">
+              <span className="material-symbols-outlined notranslate text-[18px]">lock</span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold text-slate-900 leading-tight">
+                Mode Pantau Presensi
+              </p>
+              <p className="text-[11px] text-slate-500 leading-tight mt-0.5 truncate">
+                Pengisian absen pagi kelas ini dikirim oleh <strong>{officerInfo?.name || 'Sekretaris Kelas'}</strong> ({officerInfo?.title || 'Petugas'}).
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (
       <>
       {/* Sticky Bottom Bar - Perfectly aligned to containerWidthClass */}
       <div

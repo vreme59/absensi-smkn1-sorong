@@ -17,8 +17,9 @@ import { JadwalScreen } from './components/JadwalScreen';
 import { ProfileScreen } from './components/ProfileScreenSamakan';
 import { EditProfileScreen } from './components/EditProfileScreen';
 import { ChangePasswordScreen } from './components/ChangePasswordScreen';
-import { ClassAttendanceSummary, StudentAttendance, TeacherCallAlert, UserRole } from './types';
+import { UserProfile, ClassAttendanceSummary, StudentAttendance, TeacherCallAlert, UserRole } from './types';
 import { useAuth } from './hooks/useAuth';
+import { getWewenangPengabsenHariIni } from './utils/perangkatKelasManager';
 
 // Old Attendance Screen
 import { AttendanceScreen } from './components/AttendanceScreen';
@@ -48,7 +49,22 @@ export default function App() {
   const [oldStudents, setOldStudents] = useState<Student[]>(() => {
     const saved = localStorage.getItem('smkn1_attendance_students_v2');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const seen = new Set<string>();
+          const deduped = parsed.filter(s => {
+            const key = (s.name || '').trim().toUpperCase();
+            if (!key || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          return deduped.map((s, idx) => {
+            const numStr = String(idx + 1).padStart(2, '0');
+            return { ...s, absentNo: numStr, studentNo: numStr };
+          });
+        }
+      } catch (e) { console.error(e); }
     }
     return OLD_INITIAL_STUDENTS;
   });
@@ -64,7 +80,7 @@ export default function App() {
   };
 
   const supabaseRole: UserRole = (auth.userRole as UserRole) ?? 'siswa';
-  const currentUser = auth.profile
+  const currentUser: UserProfile = auth.profile
     ? {
         ...USER_PROFILES[supabaseRole] ?? USER_PROFILES.siswa,
         id: auth.profile.id,
@@ -74,20 +90,42 @@ export default function App() {
         role: supabaseRole,
         roleTitle:
           supabaseRole === 'operator' ? 'Administrator Sekolah'
-          : supabaseRole === 'guru_piket' ? 'Guru Piket'
-          : supabaseRole === 'wali_kelas' ? 'Wali Kelas'
+          : auth.profile.is_wali_kelas ? `Wali Kelas ${auth.profile.wali_kelas?.nama || ''}`
+          : auth.profile.is_guru_piket ? 'Guru Piket'
           : supabaseRole === 'guru' ? 'Guru Mata Pelajaran'
-          : supabaseRole === 'sekretaris' ? 'Sekretaris Kelas'
+          : auth.profile.is_sekretaris ? 'Sekretaris Kelas'
           : 'Siswa',
         identifier: auth.profile.username,
-        kelas_id: auth.profile.kelas_id || 'e88128be-8fc3-4973-8d69-00ef17571626',
-        kelas: (auth.profile as any).kelas || { id: 'e88128be-8fc3-4973-8d69-00ef17571626', nama: 'XII TKJ 1' },
+        kelas_id: auth.profile.kelas_id || auth.profile.wali_kelas?.id || 'e88128be-8fc3-4973-8d69-00ef17571626',
+        kelas: (auth.profile as any).kelas || (auth.profile.wali_kelas ? { id: auth.profile.wali_kelas.id, nama: auth.profile.wali_kelas.nama } : { id: 'e88128be-8fc3-4973-8d69-00ef17571626', nama: 'XII TKJ 1' }),
+        is_wali_kelas: auth.profile.is_wali_kelas,
+        wali_kelas: auth.profile.wali_kelas ? { id: auth.profile.wali_kelas.id, nama: auth.profile.wali_kelas.nama } : undefined,
+        is_guru_piket: auth.profile.is_guru_piket,
       }
     : {
         ...USER_PROFILES.siswa,
         kelas_id: 'e88128be-8fc3-4973-8d69-00ef17571626',
         kelas: { id: 'e88128be-8fc3-4973-8d69-00ef17571626', nama: 'XII TKJ 1' },
       };
+
+  // Status Kehadiran Hari Ini & Wewenang Pengabsen Harian Siswa
+  const todayStatusMap = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    oldStudents.forEach(s => {
+      map[s.id] = s.status;
+    });
+    return map;
+  }, [oldStudents]);
+
+  const wewenangPengabsen = React.useMemo(() => {
+    const targetKelasId = currentUser.kelas_id || 'e88128be-8fc3-4973-8d69-00ef17571626';
+    return getWewenangPengabsenHariIni(
+      targetKelasId,
+      currentUser.id,
+      todayStatusMap,
+      oldStudents.map(s => ({ id: s.id, nama: s.name }))
+    );
+  }, [currentUser.kelas_id, currentUser.id, todayStatusMap, oldStudents]);
 
   // Load real students for currentUser.kelas_id
   React.useEffect(() => {
@@ -116,7 +154,16 @@ export default function App() {
           statusMap[a.siswa_id] = { status: s, note: a.keterangan };
         });
 
-        const mapped: Student[] = dbStudents.map((s, idx) => {
+        // Deduplicate students by name to guarantee exact unique list
+        const seenNames = new Set<string>();
+        const uniqueDbStudents = dbStudents.filter(s => {
+          const key = (s.nama || '').trim().toUpperCase();
+          if (seenNames.has(key)) return false;
+          seenNames.add(key);
+          return true;
+        });
+
+        const mapped: Student[] = uniqueDbStudents.map((s, idx) => {
           const numStr = String(idx + 1).padStart(2, '0');
           const existing = statusMap[s.id];
           return {
@@ -132,6 +179,7 @@ export default function App() {
         });
 
         setOldStudents(mapped);
+        localStorage.setItem('smkn1_attendance_students_v2', JSON.stringify(mapped));
       }
     }
 
@@ -340,7 +388,18 @@ export default function App() {
           ) : supabaseRole === 'siswa' ? (
               <div className="w-full max-w-md mx-auto pb-20">
                 <AttendanceScreen
-                  readOnly={true}
+                  readOnly={!wewenangPengabsen.canInputAttendance}
+                  officerInfo={{
+                    canInput: wewenangPengabsen.canInputAttendance,
+                    officerRole: wewenangPengabsen.officerRole,
+                    title: wewenangPengabsen.officerTitle,
+                    name: wewenangPengabsen.activeOfficerName,
+                    reason: wewenangPengabsen.officerReason,
+                    isDelegated: wewenangPengabsen.isDelegated,
+                    hierarchyStep: wewenangPengabsen.hierarchyStep,
+                    sekretarisAbsent: wewenangPengabsen.sekretarisAbsent,
+                    ketuaAbsent: wewenangPengabsen.ketuaAbsent,
+                  }}
                   classTitle={currentUser.kelas?.nama}
                   students={oldStudents}
                   onUpdateStudentStatus={handleUpdateStudentStatus}
@@ -353,7 +412,7 @@ export default function App() {
                   }}
                   onEditNote={(student) => {
                     setSelectedStudentForAttachment(student);
-                    setAttachmentModalMode('view'); // Just view for siswa
+                    setAttachmentModalMode(wewenangPengabsen.canInputAttendance ? 'edit' : 'view');
                   }}
                   isDraftSavedOffline={isDraftSavedOffline}
                   onNavigateHome={() => setCurrentTab('beranda')}

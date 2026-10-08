@@ -16,6 +16,9 @@ export interface UserProfile {
   phone?: string;
   kelas_id?: string;
   kelas?: { id: string; nama: string };
+  is_wali_kelas?: boolean;
+  wali_kelas?: { id: string; nama: string };
+  is_guru_piket?: boolean;
 }
 
 export interface ScheduleItem {

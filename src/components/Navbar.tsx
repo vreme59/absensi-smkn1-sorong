@@ -62,7 +62,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {currentTab === 'wali-kelas' ? 'supervisor_account' : currentTab === 'guru-piket' ? 'security' : 'school'}
               </span>
               <span className="text-[11px]">
-                {currentTab === 'wali-kelas' ? 'Wali Kelas' : currentTab === 'guru-piket' ? 'Guru Piket' : 'Guru Mapel'}
+                {currentTab === 'wali-kelas'
+                  ? (user?.wali_kelas ? `Wali ${user.wali_kelas.nama}` : 'Wali Kelas')
+                  : currentTab === 'guru-piket'
+                  ? 'Guru Piket'
+                  : 'Guru Mapel'}
               </span>
               <span className="material-symbols-outlined notranslate text-[14px]">
                 expand_more
@@ -71,7 +75,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Dropdown Menu */}
             {showRoleMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 p-1.5 z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 p-1.5 z-50 text-slate-800 animate-in fade-in zoom-in-95 duration-150">
                 <p className="px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Beralih Workspace:
                 </p>
@@ -87,30 +91,38 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="material-symbols-outlined notranslate text-[16px]">verified</span>
                   <span>Guru Mata Pelajaran</span>
                 </button>
-                <button
-                  onClick={() => {
-                    onNavigateToTab('wali-kelas');
-                    setShowRoleMenu(false);
-                  }}
-                  className={`w-full px-2.5 py-2 text-left rounded-xl text-xs font-bold flex items-center gap-2 transition ${
-                    currentTab === 'wali-kelas' ? 'bg-primary text-white' : 'hover:bg-slate-50'
-                  }`}
-                >
-                  <span className="material-symbols-outlined notranslate text-[16px]">supervisor_account</span>
-                  <span>Dashboard Wali Kelas</span>
-                </button>
-                <button
-                  onClick={() => {
-                    onNavigateToTab('guru-piket');
-                    setShowRoleMenu(false);
-                  }}
-                  className={`w-full px-2.5 py-2 text-left rounded-xl text-xs font-bold flex items-center gap-2 transition ${
-                    currentTab === 'guru-piket' ? 'bg-primary text-white' : 'hover:bg-slate-50'
-                  }`}
-                >
-                  <span className="material-symbols-outlined notranslate text-[16px]">security</span>
-                  <span>Portal Live Guru Piket</span>
-                </button>
+
+                {/* HANYA MUNCUL JIKA GURU MEMILIKI KELAS PERWALIAN */}
+                {(user?.is_wali_kelas || user?.role === 'wali_kelas') && (
+                  <button
+                    onClick={() => {
+                      onNavigateToTab('wali-kelas');
+                      setShowRoleMenu(false);
+                    }}
+                    className={`w-full px-2.5 py-2 text-left rounded-xl text-xs font-bold flex items-center gap-2 transition ${
+                      currentTab === 'wali-kelas' ? 'bg-indigo-600 text-white' : 'hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined notranslate text-[16px]">supervisor_account</span>
+                    <span>Wali Kelas {user?.wali_kelas?.nama ? `(${user.wali_kelas.nama})` : ''}</span>
+                  </button>
+                )}
+
+                {/* HANYA MUNCUL JIKA GURU SEDANG PIKET HARI INI ATAU MEMILIKI ROLE PIKET */}
+                {(user?.is_guru_piket || user?.role === 'guru_piket' || user?.role === 'operator') && (
+                  <button
+                    onClick={() => {
+                      onNavigateToTab('guru-piket');
+                      setShowRoleMenu(false);
+                    }}
+                    className={`w-full px-2.5 py-2 text-left rounded-xl text-xs font-bold flex items-center gap-2 transition ${
+                      currentTab === 'guru-piket' ? 'bg-amber-600 text-white' : 'hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined notranslate text-[16px]">security</span>
+                    <span>Portal Live Guru Piket</span>
+                  </button>
+                )}
               </div>
             )}
           </div>

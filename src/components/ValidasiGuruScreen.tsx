@@ -129,7 +129,15 @@ export const ValidasiGuruScreen: React.FC<ValidasiGuruScreenProps> = ({
           .order('nama', { ascending: true });
 
         if (sErr) throw sErr;
-        setStudents(studentList || []);
+        // Deduplicate students by name to guarantee unique count
+        const seenNames = new Set<string>();
+        const uniqueStudents = (studentList || []).filter(s => {
+          const key = (s.nama || '').trim().toUpperCase();
+          if (seenNames.has(key)) return false;
+          seenNames.add(key);
+          return true;
+        });
+        setStudents(uniqueStudents);
 
         // Fetch today's mapel or harian attendance
         const jId = activeJadwalItem?.id;
@@ -490,6 +498,34 @@ export const ValidasiGuruScreen: React.FC<ValidasiGuruScreenProps> = ({
             Aktif
           </span>
         </div>
+
+        {/* Morning Attendance & Delegation Status Banner */}
+        {(() => {
+          const hasHarianAttendance = Object.keys(morningStatusMap).length > 0;
+          return (
+            <div className={`mt-2 rounded-xl p-2.5 backdrop-blur-md border text-xs flex items-start gap-2 ${
+              hasHarianAttendance
+                ? 'bg-emerald-500/20 border-emerald-400/30 text-emerald-100'
+                : 'bg-amber-500/20 border-amber-400/30 text-amber-100'
+            }`}>
+              <span className="material-symbols-outlined notranslate text-[18px] shrink-0 mt-0.5 text-white">
+                {hasHarianAttendance ? 'task_alt' : 'info'}
+              </span>
+              <div className="min-w-0">
+                <p className="font-bold text-white text-[11px]">
+                  {hasHarianAttendance
+                    ? 'Presensi Pagi Telah Terisi'
+                    : 'Pengabsenan Harian Otomatis Oleh Guru'}
+                </p>
+                <p className="text-[10px] opacity-90 leading-relaxed mt-0.5">
+                  {hasHarianAttendance
+                    ? 'Presensi pagi telah dicatat oleh perangkat kelas. Anda dapat memvalidasi dan mencatat presensi khusus jam pelajaran Anda.'
+                    : 'Sekretaris/Ketua Kelas belum mengisi presensi pagi. Pengisian kehadiran jam pelajaran Anda ini otomatis dicatat sebagai Absensi Harian Kelas.'}
+                </p>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Period Filter Tabs: Hari Ini, 1 Minggu, 1 Bulan, Per Semester */}

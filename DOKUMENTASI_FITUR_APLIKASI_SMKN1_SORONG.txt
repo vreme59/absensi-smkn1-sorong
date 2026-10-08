@@ -1,0 +1,399 @@
+================================================================================
+DOKUMENTASI LENGKAP & DAFTAR FITUR APLIKASI PRESENSI SMKN 1 SORONG
+================================================================================
+Aplikasi Web Sistem Informasi Presensi & Jadwal Pelajaran
+SMK Negeri 1 Sorong - Berbasis Digital & Realtime
+Versi: 2.0 (Terbaru)
+Terakhir Diperbarui: Oktober 2026
+
+Catatan: Dokumen ini disusun secara rinci dan terstruktur agar dapat digunakan
+sebagai bahan presentasi, demonstrasi, maupun panduan sosialisasi kepada pihak
+sekolah, kepala sekolah, wakil kurikulum, tata usaha, dewan guru, dan siswa.
+================================================================================
+
+
+--------------------------------------------------------------------------------
+DAFTAR ISI
+--------------------------------------------------------------------------------
+1. RINGKASAN & TUJUAN APLIKASI
+2. ARSITEKTUR & TEKNOLOGI YANG DIGUNAKAN
+3. PERAN PENGGUNA (ROLE) & HAK AKSES
+   - 3.1 Role Siswa (Pelajar)
+   - 3.2 Role Guru Mata Pelajaran
+   - 3.3 Role Wali Kelas
+   - 3.4 Role Guru Piket
+   - 3.5 Role Operator (Tata Usaha / TU) [FITUR BARU]
+4. RINCIAN SELURUH FITUR UTAMA
+   - 4.1 Modul Login & Autentikasi Pengguna
+   - 4.2 Modul Beranda (Dashboard Harian & Kartu Informasi)
+   - 4.3 Modul Jadwal Pelajaran (54 Kelas & Mode Tamu Publik)
+   - 4.4 Modul Presensi & Rekapitulasi (Harian, Mingguan, Bulanan, Semester)
+   - 4.5 Modul Cetak Laporan Resmi & PDF Presensi
+   - 4.6 Modul Surat Panggilan Orang Tua Otomatis
+   - 4.7 Modul Panel Tata Usaha / Operator (Kelola Jadwal, Wali Kelas, Piket)
+   - 4.8 Modul Profil, Kompresi Foto Profil Cerdas & Ganti Password
+   - 4.9 Modul Dukungan Offline (Offline Draft Storage)
+   - 4.10 Modul Hierarki Delegasi Pengabsen Pagi 4-Tingkat [FITUR UTAMA BARU]
+   - 4.11 Modul Deteksi Adaptif Wali Kelas & Tab Perangkat Kelas [FITUR BARU]
+5. DATA SEKOLAH YANG TELAH TERSINKRONISASI
+   - 5.1 Data 54 Kelas Riil SMKN 1 Sorong
+   - 5.2 Data Dewan Guru & Akun Login Guru
+   - 5.3 Data Siswa (Data Riil Kelas XII & Siswa Kelas X-XI)
+6. DAFTAR AKUN CONTOH (DEMO LOGIN) UNTUK PRESENTASI
+7. KESIMPULAN & TAHAP PENGEMBANGAN SELANJUTNYA
+
+
+================================================================================
+1. RINGKASAN & TUJUAN APLIKASI
+================================================================================
+Aplikasi Presensi Digital SMKN 1 Sorong dirancang untuk mendigitalkan seluruh
+alur pencatatan kehadiran, pemantauan jadwal belajar mengajar, serta pengawasan
+kedisiplinan di SMKN 1 Sorong.
+
+Masalah yang Diatasi:
+- Menggantikan buku presensi kertas konvensional yang rawan hilang atau rusak.
+- Menghilangkan keterlambatan rekapitulasi presensi bulanan/semesteran.
+- Mempermudah guru mata pelajaran memvalidasi kehadiran siswa di jam pelajarannya.
+- Mempermudah Wali Kelas dan Guru Piket dalam memantau siswa yang bolos/absen.
+- Mempermudah Tata Usaha (TU) dalam mengatur jadwal pelajaran 54 kelas secara
+  terpusat dan menetapkan wali kelas serta guru piket secara digital.
+
+
+================================================================================
+2. ARSITEKTUR & TEKNOLOGI YANG DIGUNAKAN
+================================================================================
+- Frontend Framework : React 18 + TypeScript (Modern, cepat, aman dari bug tipe)
+- Build Tool          : Vite (Proses build kilat < 1 detik)
+- UI Styling          : Tailwind CSS + Google Material Symbols Icons
+- Database & Backend  : Supabase (PostgreSQL Cloud Realtime & Supabase Auth)
+- Kompresi Gambar     : HTML5 Canvas Bicubic High-Quality Smoothing
+- Penyimpanan Lokal   : Browser LocalStorage (untuk mode offline/draft)
+- Responsif           : Tampilan Mobile-First (dioptimalkan untuk smartphone
+                        guru & siswa, serta nyaman diakses via laptop/tablet).
+
+
+================================================================================
+3. PERAN PENGGUNA (ROLE) & HAK AKSES
+================================================================================
+
+3.1. ROLE SISWA (PELAJAR):
+- Meninjau jadwal pelajaran harian dan mingguan kelas masing-masing.
+- Sistem Wewenang Presensi Adaptif (Hierarki Pengabsen Pagi):
+  * Sekretaris Kelas (Petugas Utama): Memiliki hak akses penuh untuk mendata presensi pagi seluruh siswa.
+  * Ketua Kelas (Petugas Cadangan 1): Otomatis memegang hak pengisian jika Sekretaris Kelas tidak hadir (Sakit/Izin/Alfa).
+  * Siswa Penerima Mandat Khusus Wali Kelas (Petugas Cadangan 2): Memegang wewenang jika Sekretaris & Ketua keduanya absen dan ditunjuk khusus oleh Wali Kelas.
+  * Siswa Biasa (Mode Pantau / Read-Only): Berada dalam mode transparan untuk memantau status kehadiran diri dan teman sekelas tanpa risiko mengubah/merusak data sembarangan.
+- Mengunggah surat izin sakit / surat dokter sebagai bukti kehadiran.
+- Melihat riwayat kehadiran dan status validasi dari guru pengampu.
+- Mengubah foto profil (dengan kompresi otomatis) dan kata sandi akun siswa.
+
+3.2. ROLE GURU MATA PELAJARAN:
+- Mengetahui jadwal mengajar hari ini secara otomatis berdasarkan harinya.
+- Menerima dan memvalidasi presensi siswa per jam mata pelajaran yang diajar.
+- Fungsi Failover Pengabsen Harian (Tingkat 4): Jika presensi pagi belum terisi sama sekali oleh Sekretaris, Ketua, maupun Mandat Wali Kelas, guru jam pelajaran ke-1 (atau jam ke-2/ke-3 jika guru sebelumnya berhalangan) secara otomatis bertindak sebagai pengabsen resmi kelas tersebut.
+- Mengakses rekap kehadiran kelas yang diajar (Hari Ini, 1 Minggu, 1 Bulan, Per Semester).
+- Mencetak laporan presensi resmi siap cetak / PDF.
+- Menerbitkan Surat Panggilan Orang Tua untuk siswa yang sering absen/bolos.
+
+3.3. ROLE WALI KELAS (DETEKSI OTOMATIS & ADAPTIF):
+- Hanya muncul pada guru yang memang ditugaskan sebagai Wali Kelas oleh Tata Usaha.
+- Tab Perangkat & Mandat:
+  * Memilih dan menetapkan Sekretaris Kelas dan Ketua Kelas dari daftar siswa rombel.
+  * Menetapkan Siswa Mandat Darurat (Siswa Terpercaya) jika Sekretaris & Ketua sama-sama tidak masuk.
+  * Memantau status wewenang pengabsen hari ini secara langsung.
+- Tab Radar Siswa Rawan:
+  * Mendeteksi otomatis siswa dengan tingkat ketidakhadiran tinggi (peringatan kuning dan merah).
+- Tab Rekap Kehadiran Kelas:
+  * Melihat persentase kehadiran bulanan dan kumulatif siswa binaan kelasnya.
+
+3.4. ROLE GURU PIKET:
+- Memantau aktivitas presensi seluruh 54 kelas sekolah secara realtime.
+- Melihat kelas mana yang sudah melakukan presensi dan yang belum ada guru.
+- Mencatat kejadian harian piket dan menangani siswa terlambat/dispensasi.
+
+3.5. ROLE OPERATOR (TATA USAHA / TU) [FITUR BARU]:
+- Mengelola data jadwal pelajaran untuk 54 kelas di SMKN 1 Sorong.
+- Menambah, mengubah jam/guru/mapel, serta menghapus jadwal pelajaran.
+- Menetapkan guru yang bertugas sebagai Wali Kelas untuk masing-masing kelas.
+- Mengatur jadwal pembagian tugas Guru Piket harian (Senin s/d Sabtu).
+
+
+================================================================================
+4. RINCIAN SELURUH FITUR UTAMA
+================================================================================
+
+--------------------------------------------------------------------------------
+4.1 MODUL LOGIN & AUTENTIKASI PENGGUNA
+--------------------------------------------------------------------------------
+- Login Fleksibel & Cerdas:
+  * Pengguna dapat login menggunakan Nama Guru, Username, atau Email.
+  * Pencarian username bersifat Case-Insensitive (tidak membedakan huruf besar
+    atau kecil, contoh: "TU" atau "tu" tetap bisa login).
+- Tombol Cepat "Mode TU":
+  * Tombol sekali klik di layar login yang langsung mengisi kredensial Operator
+    Tata Usaha secara otomatis untuk kemudahan demonstrasi.
+- Mode Tamu (Public Schedule Viewer):
+  * Pengunjung (orang tua, dinas, atau tamu) dapat melihat jadwal pelajaran
+    lengkap sekolah tanpa perlu memiliki akun atau login terlebih dahulu.
+
+--------------------------------------------------------------------------------
+4.2 MODUL BERANDA (DASHBOARD HARIAN)
+--------------------------------------------------------------------------------
+- Header personal dengan sapaan nama pengguna, peran, logo SMKN 1 Sorong, serta
+  jam dan tanggal aktif.
+- Kartu Ringkasan Kelas & Presensi Harian (total hadir, sakit, izin, alfa).
+- Kartu Jadwal Pelajaran Hari Ini yang interaktif dan sesuai hari kalender.
+- Tombol "Panggil Guru": Memudahkan siswa menghubungi guru yang belum hadir di kelas.
+- Pintasan Navigasi Cepat ke menu Jadwal, Absensi/Validasi, dan Profil.
+
+--------------------------------------------------------------------------------
+4.3 MODUL JADWAL PELAJARAN (54 KELAS)
+--------------------------------------------------------------------------------
+- Mencakup 54 Kelas Lengkap SMKN 1 Sorong (Kelas X, XI, dan XII).
+- Filter Tingkatan Kelas: Tab pemilih Tingkat X, Tingkat XI, Tingkat XII.
+- Filter Kelas Spesifik: Dropdown 54 kelas dari berbagai program keahlian.
+- Filter Hari: Senin, Selasa, Rabu, Kamis, Jumat, Sabtu.
+- Kartu Sesi Pelajaran:
+  * Nama Mata Pelajaran.
+  * Rentang Jam Pelajaran (contoh: 07:15 - 08:35 WIT).
+  * Nama Guru Pengampu berserta foto avatar guru.
+- Integrasi Klik Jadwal ke Validasi Guru:
+  * Ketika guru mengklik jadwal kelas yang dia ampu, sistem langsung membuka
+    tampilan rekap presensi dan validasi untuk kelas tersebut.
+
+--------------------------------------------------------------------------------
+4.4 MODUL PRESENSI & REKAPITULASI VALIDASI
+--------------------------------------------------------------------------------
+- Status Kehadiran Standar Nasional:
+  * H : Hadir
+  * S : Sakit (dilengkapi fitur upload foto surat dokter)
+  * I : Izin (dilengkapi catatan keterangan izin)
+  * B : Bolos
+  * A : Alfa (Tanpa Keterangan)
+- Tab Rekapitulasi Berjenjang untuk Guru:
+  * Rekap Hari Ini : Daftar nama siswa dan status kehadiran pada hari ini.
+  * Rekap 1 Minggu : Ringkasan jumlah kehadiran selama 6 hari sekolah.
+  * Rekap 1 Bulan  : Total akumulasi kehadiran bulanan per siswa.
+  * Rekap Semester : Rekap total satu semester untuk keperluan nilai rapor.
+- Indikator Warna Status Kehadiran yang kontras dan mudah dipahami.
+
+--------------------------------------------------------------------------------
+4.5 MODUL CETAK LAPORAN RESMI & PDF PRESENSI
+--------------------------------------------------------------------------------
+- Format Cetak Standar Administrasi Sekolah:
+  * Dilengkapi Kop Surat Resmi SMKN 1 Sorong.
+  * Informasi Kelas, Semester, Tahun Ajaran, dan Nama Guru Pengampu.
+  * Tabel rekapitulasi persentase kehadiran seluruh siswa.
+  * Kolom tanda tangan resmi Guru Mata Pelajaran dan Kepala Sekolah.
+- Tombol Cetak / Simpan PDF yang otomatis membuka jendela cetak browser.
+
+--------------------------------------------------------------------------------
+4.6 MODUL SURAT PANGGILAN ORANG TUA OTOMATIS
+--------------------------------------------------------------------------------
+- Sistem mendeteksi otomatis siswa yang memiliki catatan Alfa/Bolos >= 3 kali.
+- Generate Surat Panggilan Resmi dengan format standar sekolah:
+  * Nomor surat dan perihal pemanggilan wali murid.
+  * Rincian ketidakhadiran siswa.
+  * Tanggal, waktu, dan ruangan pertemuan di ruang Bimbingan Konseling (BK).
+- Dapat langsung dicetak atau dikirimkan salinannya.
+
+--------------------------------------------------------------------------------
+4.7 MODUL PANEL TATA USAHA / OPERATOR [FITUR BARU]
+--------------------------------------------------------------------------------
+Panel khusus dengan hak akses tertinggi untuk staf Tata Usaha (TU):
+
+A. TAB KELOLA JADWAL MAPEL:
+   - Pilih dari 54 kelas yang ada di database.
+   - Pilih hari pelajaran (Senin s/d Sabtu).
+   - Tambah Jadwal Baru: Memilih mata pelajaran, memilih guru pengampu, serta
+     menentukan jam mulai dan jam selesai.
+   - Edit Jadwal: Mengubah sesi pelajaran yang telah ada.
+   - Hapus Jadwal: Menghapus sesi pelajaran dari database Supabase.
+
+B. TAB PENETAPAN WALI KELAS:
+   - Menampilkan seluruh 54 kelas dengan pencarian cepat (*search box*).
+   - Memilih guru yang bertugas sebagai Wali Kelas melalui dropdown daftar guru.
+   - Tombol simpan yang langsung memperbarui relasi wali kelas di database.
+
+C. TAB PENETAPAN GURU PIKET:
+   - Pengaturan pembagian hari tugas piket dari hari Senin sampai Sabtu.
+   - Menambahkan guru pengajar ke jadwal piket hari tertentu.
+   - Menghapus guru piket yang berhalangan atau berganti tugas.
+
+--------------------------------------------------------------------------------
+4.8 MODUL PROFIL, KOMPRESI FOTO CERDAS & GANTI PASSWORD
+--------------------------------------------------------------------------------
+A. KOMPRESI FOTO PROFIL CERDAS (SMART AVATAR COMPRESSION):
+   - Masalah Umum: Pengguna mengunggah foto selfie atau foto kamera HP berukuran
+     sangat besar (3 MB hingga 10 MB+) yang membuat server lemot dan kuota boros.
+   - Solusi: Sistem otomatis memotong foto di area tengah (center crop) dan
+     mengompresinya ke resolusi proporsional 512x512 piksel dengan algoritma
+     bicubic smoothing quality 0.85.
+   - Hasil: Ukuran file turun menjadi sekitar 30 - 50 KB (hemat kuota 98-99%),
+     namun hasil tampilan foto profil TETAP JERNIH, TAJAM, dan TIDAK BURAM/PECAH.
+   - Terdapat lencana informasi di layar: "Dikompresi: 5.2 MB -> 42 KB (-99%)".
+   - Foto otomatis tersimpan di database Supabase dan langsung diperbarui di
+     seluruh aplikasi secara seketika.
+
+B. FITUR GANTI KATA SANDI (PASSWORD) AMAN:
+   - Form ganti kata sandi dengan validasi keamanan minimal 6 karakter.
+   - Validasi kecocokan antara Password Baru dan Konfirmasi Password Baru.
+   - Tombol toggle mata (ikon lihat / sembunyikan kata sandi).
+   - Terintegrasi langsung dengan Supabase Auth API (`updateUser`).
+
+--------------------------------------------------------------------------------
+4.9 MODUL DUKUNGAN OFFLINE (OFFLINE DRAFT STORAGE)
+--------------------------------------------------------------------------------
+- Ketika sinyal internet di kelas lemah atau padam, pengisian presensi siswa
+  tetap dapat disimpan sebagai Draft di penyimpanan lokal perangkat (LocalStorage).
+- Ketika koneksi internet kembali normal, data draft dapat langsung dikirimkan
+  dan divalidasi ke server tanpa risiko data hilang.
+
+--------------------------------------------------------------------------------
+4.10 MODUL HIERARKI DELEGASI PENGABSEN PAGI 4-TINGKAT [FITUR UTAMA BARU]
+--------------------------------------------------------------------------------
+Sistem presensi dilengkapi dengan logika "Failover Bertingkat" cerdas agar proses
+pencatatan kehadiran kelas di pagi hari tidak pernah terhambat meskipun pengabsen utama
+berhalangan hadir:
+
+1. TINGKAT 1 - SEKRETARIS KELAS (PETUGAS UTAMA):
+   - Ditunjuk secara resmi oleh Wali Kelas melalui Dashboard Wali Kelas.
+   - Merupakan petugas default yang bertugas menginput kehadiran teman-teman sekelas
+     setiap pagi sebelum jam pelajaran dimulai.
+
+2. TINGKAT 2 - KETUA KELAS (CADANGAN TINGKAT 1):
+   - Jika Sekretaris Kelas tidak masuk sekolah (berstatus Sakit, Izin, Bolos, atau Alfa),
+     sistem secara otomatis mengalihkan wewenang pengabsenan kepada Ketua Kelas.
+   - Tombol pengisian dan pengiriman absen langsung aktif di akun Ketua Kelas.
+
+3. TINGKAT 3 - SISWA MANDAT DARURAT WALI KELAS (CADANGAN TINGKAT 2):
+   - Jika Sekretaris dan Ketua Kelas KEDUANYA tidak hadir di sekolah, Wali Kelas dapat
+     memberikan mandat darurat kepada salah satu siswa yang dipercayainya di kelas
+     tersebut melalui Dashboard Wali Kelas.
+   - Dilengkapi catatan instruksi khusus dari wali kelas. Siswa penerima mandat langsung
+     memperoleh akses tombol pengisian presensi hari itu.
+
+4. TINGKAT 4 - GURU MATA PELAJARAN JAM 1 / JAM 2 / JAM 3 (CADANGAN DARURAT GURU):
+   - Jika sampai jam pelajaran dimulai presensi pagi belum terisi sama sekali oleh siswa
+     (Sekretaris, Ketua, maupun Mandat tidak ada yang mengisi), maka Guru Mata Pelajaran
+     yang mengajar pada Jam Pelajaran ke-1 otomatis bertindak sebagai pengabsen harian.
+   - Jika guru jam ke-1 juga berhalangan hadir, sistem meneruskannya ke Guru Mapel Jam ke-2
+     atau Jam ke-3 sehingga rekap kehadiran kelas tetap terdata 100% setiap hari.
+
+5. MODE PANTAU (READ-ONLY) UNTUK SISWA BIASA:
+   - Siswa lain yang bukan petugas pengabsen tetap dapat membuka menu presensi, namun
+     hanya dalam mode pantau transparan (melihat daftar teman yang hadir/sakit/izin).
+   - Terdapat floating notification dock di bagian bawah layar yang menginformasikan
+     siapa yang sedang bertugas mengabsen (misal: "Sedang diisi oleh Sekretaris Kelas").
+
+--------------------------------------------------------------------------------
+4.11 MODUL DETEKSI ADAPTIF WALI KELAS & TAB PERANGKAT KELAS [FITUR BARU]
+--------------------------------------------------------------------------------
+A. DETEKSI OTOMATIS PERAN WALI KELAS:
+   - Relasi Wali Kelas dikelola secara terpusat oleh Tata Usaha di tabel database Supabase
+     (`kelas.wali_kelas_id`).
+   - Saat seorang guru login, sistem secara cerdas memeriksa apakah ID guru tersebut cocok
+     dengan data Wali Kelas suatu rombel.
+   - Jika YA (misal: Ibu Dinaria Purba -> Wali Kelas XII TKJ 1):
+     * Tombol "Dashboard Wali Kelas" otomatis muncul di Navbar atas dan Beranda.
+     * Sistem langsung menampilkan data kelas binaannya secara spesifik.
+   - Jika BUKAN WALI KELAS (guru mapel murni):
+     * Menu "Dashboard Wali Kelas" otomatis DISEMBUNYIKAN secara bersih, sehingga guru
+       hanya fokus pada jadwal mengajar dan validasi kelas miliknya.
+
+B. TAB BARU: KELOLA PERANGKAT & MANDAT:
+   - Dropdown pemilihan Sekretaris Kelas dari daftar siswa kelas binaan.
+   - Dropdown pemilihan Ketua Kelas dari daftar siswa kelas binaan.
+   - Status live kehadiran Sekretaris & Ketua Kelas hari ini (misal: "Hadir" / "Tidak Masuk").
+   - Formulir Mandat Darurat Wali Kelas:
+     * Pilihan siswa terpercaya di kelas.
+     * Input catatan pesan dari wali kelas.
+     * Tombol "Aktifkan Mandat Hari Ini" dan "Cabut Mandat".
+   - Kartu Alur Wewenang Hari Ini yang memperlihatkan tingkatan mana yang aktif saat ini.
+
+
+================================================================================
+5. DATA SEKOLAH YANG TELAH TERSINKRONISASI
+================================================================================
+
+5.1. DATA KELAS (54 KELAS):
+- Kelas X  : 18 Rombongan Belajar (Semua Program Keahlian)
+- Kelas XI : 18 Rombongan Belajar (Semua Program Keahlian)
+- Kelas XII: 18 Rombongan Belajar (Semua Program Keahlian)
+  Termasuk jurusan: Teknik Komputer dan Jaringan (TKJ), Rekayasa Perangkat Lunak (RPL),
+  Desain Komunikasi Visual (DKV), Akuntansi dan Keuangan Lembaga (AKL),
+  Otomatisasi dan Tata Kelola Perkantoran (OTKP), Bisnis Daring dan Pemasaran (BDP),
+  dan jurusan keahlian lainnya di SMKN 1 Sorong.
+
+5.2. DATA DEWAN GURU:
+- Seluruh dewan guru pengampu mata pelajaran telah terdaftar di database Supabase
+  dengan akun login menggunakan nama pengajar masing-masing.
+
+5.3. DATA SISWA:
+- Siswa Kelas XII: Terisi dengan data siswa riil (sekitar 460 siswa) sesuai data
+  Dapodik sekolah yang telah terintegrasi dengan Nomor Induk Siswa.
+- Siswa Kelas X dan XI: Terstruktur dengan data siswa 1, 2, 3... sehingga seluruh
+  menu presensi dan rekapitulasi telah terisi dan siap digunakan.
+
+
+================================================================================
+6. DAFTAR AKUN CONTOH (DEMO LOGIN) UNTUK BAHAN PRESENTASI
+================================================================================
+
+Untuk memudahkan Anda saat melakukan presentasi atau demonstrasi kepada orang
+lain, berikut daftar akun yang siap digunakan:
+
+1. AKUN OPERATOR TATA USAHA (TU):
+   - Akses: Semua pengaturan jadwal 54 kelas, wali kelas, dan guru piket.
+   - Username : TU (atau tu)
+   - Password : Demo@2025
+   *(Bisa juga langsung klik tombol "Mode TU" pada layar login)*
+
+2. AKUN GURU - WALI KELAS (CONTOH: IBU DINARIA PURBA):
+   - Status: Wali Kelas XII TKJ 1 (Tersinkronisasi otomatis dari database)
+   - Akses: Dashboard Wali Kelas (Tab Perangkat & Mandat, Radar Rawan, Rekap),
+            Jadwal Mengajar, Validasi Presensi Kelas, Cetak Laporan.
+   - Username / NIP : 198609142023212037 (atau ketik "Dinaria")
+   - Password       : Demo@2025
+
+3. AKUN GURU MATA PELAJARAN MURNI (BUKAN WALI KELAS):
+   - Status: Guru Mapel (Contoh: Ibu Laras Dwi Puspaningrum, S.Pd)
+   - Akses: Hanya Jadwal Mengajar, Validasi Kelas Pengampu, Cetak Laporan.
+            *Menu Dashboard Wali Kelas otomatis tidak tampil*.
+   - Username / NIP : 199703312024212049 (atau username "guru")
+   - Password       : Demo@2025 (atau "password123")
+
+4. AKUN SISWA (PERWAKILAN KELAS / PETUGAS PENGABSEN):
+   - Akses: Presensi Harian Pagi (Tombol Hadir/Sakit/Izin/Alfa aktif jika ditunjuk
+            sebagai Sekretaris, Ketua Kelas, atau Mandat Wali Kelas).
+   - Username : siswa (atau pilih siswa dari rombel kelas)
+   - Password : password123
+
+5. MODE SISWA BIASA (MODE PANTAU / READ-ONLY):
+   - Siswa yang bukan Sekretaris/Ketua/Mandat otomatis melihat tampilan transparan
+     (daftar hadir teman-teman tanpa tombol submit sembarangan) dilengkapi bar informasi
+     siapa yang sedang bertugas mengabsen.
+
+6. MODE TAMU (PUBLIC):
+   - Klik tautan "Lihat Jadwal Pelajaran (Mode Tamu)" di bagian bawah layar login.
+   - Tidak memerlukan username dan password, dapat melihat jadwal seluruh 54 kelas.
+
+
+================================================================================
+7. KESIMPULAN & TAHAP PENGEMBANGAN SELANJUTNYA
+================================================================================
+Aplikasi Presensi SMKN 1 Sorong saat ini telah mencapai tingkat kesiapan yang
+sangat tinggi (sekitar 85-90% fungsionalitas menyeluruh):
+- Alur dari Siswa -> Guru Pengampu -> Wali Kelas -> Guru Piket -> Tata Usaha
+  telah terhubung secara menyeluruh dalam satu ekosistem terpadu.
+- Tampilan antarmuka modern, responsif, dan mudah dipahami oleh semua kalangan pengguna.
+- Sistem penyimpanan ringan dan hemat kuota berkat teknologi kompresi otomatis.
+
+Rekomendasi Tahap Berikutnya (Jika Diperlukan):
+1. Pengisian nama-nama siswa riil untuk kelas X dan XI secara massal saat data
+   Dapodik tahun ajaran baru tersedia.
+2. Penambahan fitur ekspor rekapitulasi ke format spreadsheet Excel (.xlsx).
+3. Pengiriman notifikasi kehadiran otomatis ke nomor WhatsApp orang tua murid.
+================================================================================
+Dokumen ini dibuat secara otomatis untuk bahan presentasi aplikasi SMKN 1 Sorong.
+================================================================================

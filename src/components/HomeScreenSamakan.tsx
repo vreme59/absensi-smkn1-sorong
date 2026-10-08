@@ -190,40 +190,51 @@ export const HomeScreenGuru: React.FC<HomeScreenProps> = ({ user, onNavigateToTa
           </div>
           <span className="text-primary text-[11px] font-bold cursor-pointer hover:underline">Lihat Semua</span>
         </div>
-        {/* Quick Actions (4 Grid) */}
+        {/* Quick Actions (Adaptive Grid based on role) */}
         <div className="bg-white rounded-[24px] shadow-sm border border-slate-100 p-5 mt-1">
           <h3 className="font-headline font-bold text-slate-800 text-sm mb-3">Menu Pintasan Guru</h3>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="flex flex-wrap gap-2.5">
             <button
               onClick={() => onNavigateToTab('absensi')}
-              className="flex flex-col items-center gap-1.5 group cursor-pointer"
+              className="flex flex-col items-center gap-1.5 group cursor-pointer flex-1 min-w-[64px]"
             >
               <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform border border-emerald-100 shadow-xs">
                 <span className="material-symbols-outlined notranslate">verified</span>
               </div>
               <span className="text-[10px] font-bold text-slate-700 text-center leading-tight">Validasi<br/>Mapel</span>
             </button>
-            <button
-              onClick={() => onNavigateToTab('wali-kelas')}
-              className="flex flex-col items-center gap-1.5 group cursor-pointer"
-            >
-              <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform border border-indigo-100 shadow-xs">
-                <span className="material-symbols-outlined notranslate">supervisor_account</span>
-              </div>
-              <span className="text-[10px] font-bold text-slate-700 text-center leading-tight">Wali<br/>Kelas</span>
-            </button>
-            <button
-              onClick={() => onNavigateToTab('guru-piket')}
-              className="flex flex-col items-center gap-1.5 group cursor-pointer"
-            >
-              <div className="w-12 h-12 bg-amber-50 text-amber-700 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform border border-amber-100 shadow-xs">
-                <span className="material-symbols-outlined notranslate">security</span>
-              </div>
-              <span className="text-[10px] font-bold text-slate-700 text-center leading-tight">Guru<br/>Piket</span>
-            </button>
+
+            {/* HANYA MUNCUL JIKA USER ADALAH WALI KELAS */}
+            {(user.is_wali_kelas || user.role === 'wali_kelas') && (
+              <button
+                onClick={() => onNavigateToTab('wali-kelas')}
+                className="flex flex-col items-center gap-1.5 group cursor-pointer flex-1 min-w-[64px]"
+              >
+                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform border border-indigo-100 shadow-xs relative">
+                  <span className="material-symbols-outlined notranslate">supervisor_account</span>
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-white"></span>
+                </div>
+                <span className="text-[10px] font-bold text-indigo-900 text-center leading-tight">Wali Kelas<br/>{user.wali_kelas?.nama || ''}</span>
+              </button>
+            )}
+
+            {/* HANYA MUNCUL JIKA GURU SEDANG PIKET HARI INI */}
+            {(user.is_guru_piket || user.role === 'guru_piket' || user.role === 'operator') && (
+              <button
+                onClick={() => onNavigateToTab('guru-piket')}
+                className="flex flex-col items-center gap-1.5 group cursor-pointer flex-1 min-w-[64px]"
+              >
+                <div className="w-12 h-12 bg-amber-50 text-amber-700 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform border border-amber-100 shadow-xs relative">
+                  <span className="material-symbols-outlined notranslate">security</span>
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full ring-2 ring-white"></span>
+                </div>
+                <span className="text-[10px] font-bold text-amber-900 text-center leading-tight">Guru<br/>Piket</span>
+              </button>
+            )}
+
             <button
               onClick={() => onNavigateToTab('jadwal')}
-              className="flex flex-col items-center gap-1.5 group cursor-pointer"
+              className="flex flex-col items-center gap-1.5 group cursor-pointer flex-1 min-w-[64px]"
             >
               <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-active:scale-95 transition-transform border border-blue-100 shadow-xs">
                 <span className="material-symbols-outlined notranslate">calendar_month</span>
@@ -233,65 +244,69 @@ export const HomeScreenGuru: React.FC<HomeScreenProps> = ({ user, onNavigateToTa
           </div>
         </div>
 
-        {/* Feature: Portal Wali Kelas Banner Card */}
-        <div
-          onClick={() => onNavigateToTab('wali-kelas')}
-          className="bg-gradient-to-r from-indigo-900 to-[#003d73] text-white rounded-[24px] p-4 shadow-sm border border-indigo-800/40 cursor-pointer hover:shadow-md transition active:scale-98"
-        >
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center backdrop-blur-md">
-                <span className="material-symbols-outlined notranslate text-white text-[22px]">
-                  supervisor_account
-                </span>
+        {/* Feature: Portal Wali Kelas Banner Card (HANYA DITAMPILKAN JIKA GURU ADALAH WALI KELAS) */}
+        {(user.is_wali_kelas || user.role === 'wali_kelas') && (
+          <div
+            onClick={() => onNavigateToTab('wali-kelas')}
+            className="bg-gradient-to-r from-indigo-900 to-[#003d73] text-white rounded-[24px] p-4 shadow-sm border border-indigo-800/40 cursor-pointer hover:shadow-md transition active:scale-98"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center backdrop-blur-md">
+                  <span className="material-symbols-outlined notranslate text-white text-[22px]">
+                    supervisor_account
+                  </span>
+                </div>
+                <div>
+                  <span className="bg-emerald-400/30 text-emerald-200 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Wali Kelas {user.wali_kelas?.nama || ''}
+                  </span>
+                  <h4 className="font-headline font-bold text-sm text-white mt-0.5">
+                    Dashboard Khusus Wali Kelas
+                  </h4>
+                </div>
               </div>
-              <div>
-                <span className="bg-indigo-400/30 text-indigo-200 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
-                  Peran Wali Kelas
-                </span>
-                <h4 className="font-headline font-bold text-sm text-white mt-0.5">
-                  Dashboard Khusus Wali Kelas
-                </h4>
-              </div>
+              <span className="material-symbols-outlined notranslate text-indigo-200 text-lg">
+                arrow_forward
+              </span>
             </div>
-            <span className="material-symbols-outlined notranslate text-indigo-200 text-lg">
-              arrow_forward
-            </span>
+            <p className="text-indigo-100 text-xs mt-2 leading-relaxed">
+              Pantau kehadiran kelas perwalian {user.wali_kelas?.nama || ''}, kelola sekretaris &amp; ketua kelas, serta berikan mandat darurat absensi jika sekretaris tidak hadir.
+            </p>
           </div>
-          <p className="text-indigo-100 text-xs mt-2 leading-relaxed">
-            Pantau kehadiran kelas perwalian, deteksi siswa rawan Alfa &ge; 3, dan terbitkan Surat Panggilan Orang Tua otomatis format resmi.
-          </p>
-        </div>
+        )}
 
-        {/* Feature: Portal Guru Piket Banner Card */}
-        <div
-          onClick={() => onNavigateToTab('guru-piket')}
-          className="bg-gradient-to-r from-amber-800 to-amber-950 text-white rounded-[24px] p-4 shadow-sm border border-amber-700/40 cursor-pointer hover:shadow-md transition active:scale-98"
-        >
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center backdrop-blur-md">
-                <span className="material-symbols-outlined notranslate text-amber-300 text-[22px]">
-                  door_sliding
-                </span>
+        {/* Feature: Portal Guru Piket Banner Card (HANYA DITAMPILKAN JIKA GURU SEDANG PIKET HARI INI) */}
+        {(user.is_guru_piket || user.role === 'guru_piket' || user.role === 'operator') && (
+          <div
+            onClick={() => onNavigateToTab('guru-piket')}
+            className="bg-gradient-to-r from-amber-800 to-amber-950 text-white rounded-[24px] p-4 shadow-sm border border-amber-700/40 cursor-pointer hover:shadow-md transition active:scale-98"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-white/15 flex items-center justify-center backdrop-blur-md">
+                  <span className="material-symbols-outlined notranslate text-amber-300 text-[22px]">
+                    door_sliding
+                  </span>
+                </div>
+                <div>
+                  <span className="bg-amber-400/30 text-amber-200 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
+                    Piket Ketertiban
+                  </span>
+                  <h4 className="font-headline font-bold text-sm text-white mt-0.5">
+                    Portal Live Guru Piket
+                  </h4>
+                </div>
               </div>
-              <div>
-                <span className="bg-amber-400/30 text-amber-200 text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">
-                  Piket Ketertiban
-                </span>
-                <h4 className="font-headline font-bold text-sm text-white mt-0.5">
-                  Portal Live Guru Piket
-                </h4>
-              </div>
+              <span className="material-symbols-outlined notranslate text-amber-200 text-lg">
+                arrow_forward
+              </span>
             </div>
-            <span className="material-symbols-outlined notranslate text-amber-200 text-lg">
-              arrow_forward
-            </span>
+            <p className="text-amber-100 text-xs mt-2 leading-relaxed">
+              Catat siswa terlambat di gerbang secara real-time dan pantau radar siswa bolos mapel dari seluruh 54 kelas serentak.
+            </p>
           </div>
-          <p className="text-amber-100 text-xs mt-2 leading-relaxed">
-            Catat siswa terlambat di gerbang secara real-time dan pantau radar siswa bolos mapel dari seluruh 54 kelas serentak.
-          </p>
-        </div>
+        )}
         
       </div>
     </div>

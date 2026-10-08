@@ -26,8 +26,50 @@ export function useAuth() {
       setState({ profile: null, loading: false, error: 'Profil tidak ditemukan.' });
       return null;
     }
-    setState({ profile: data as Profile, loading: false, error: null });
-    return data as Profile;
+
+    const prof = { ...(data as Profile) };
+
+    // Dynamic Homeroom Check: Is this teacher a Wali Kelas for any class?
+    if (prof.role === 'guru') {
+      try {
+        const { data: homeroomClass } = await supabase
+          .from('kelas')
+          .select('id, nama')
+          .eq('wali_kelas_id', userId)
+          .order('nama', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (homeroomClass) {
+          prof.is_wali_kelas = true;
+          prof.wali_kelas = homeroomClass;
+        } else {
+          prof.is_wali_kelas = false;
+          prof.wali_kelas = null;
+        }
+
+        // Dynamic Duty Check: Is this teacher on Guru Piket duty today?
+        const hariMap: Record<number, string> = {
+          0: 'Minggu', 1: 'Senin', 2: 'Selasa', 3: 'Rabu', 4: 'Kamis', 5: 'Jumat', 6: 'Sabtu'
+        };
+        const todayHari = hariMap[new Date().getDay()] || 'Senin';
+        const savedPiket = localStorage.getItem('smkn1_jadwal_piket_v2');
+        if (savedPiket) {
+          try {
+            const piketData = JSON.parse(savedPiket);
+            const todayGurus: string[] = piketData[todayHari] || [];
+            prof.is_guru_piket = todayGurus.includes(userId);
+          } catch (e) {
+            console.error('Error parsing piket schedule in auth:', e);
+          }
+        }
+      } catch (err) {
+        console.error('Error checking homeroom / duty status:', err);
+      }
+    }
+
+    setState({ profile: prof, loading: false, error: null });
+    return prof;
   }, []);
 
   useEffect(() => {

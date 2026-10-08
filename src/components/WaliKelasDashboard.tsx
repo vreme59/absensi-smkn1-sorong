@@ -5,13 +5,21 @@ import { exportAttendanceToExcel, StudentRecapItem } from '../utils/exportAttend
 import { CetakRekapModal } from './CetakRekapModal';
 import { SuratPanggilanModal, SuratPanggilanData } from './SuratPanggilanModal';
 
+import {
+  getPerangkatKelas,
+  savePerangkatKelas,
+  setMandatHariIni,
+  getWewenangPengabsenHariIni,
+  PerangkatKelasConfig,
+} from '../utils/perangkatKelasManager';
+
 interface WaliKelasDashboardProps {
   user: UserProfile;
   onNavigateHome?: () => void;
   onShowToast: (title: string, desc: string, type?: 'success' | 'warning' | 'info') => void;
 }
 
-export type WaliTab = 'rawan' | 'rekap' | 'surat';
+export type WaliTab = 'rawan' | 'perangkat' | 'rekap';
 
 export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
   user,
@@ -20,9 +28,17 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
 }) => {
   const [classes, setClasses] = useState<{ id: string; nama: string; wali_kelas_id?: string }[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<WaliTab>('rawan');
+  const [activeTab, setActiveTab] = useState<WaliTab>('perangkat');
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Perangkat Kelas & Delegasi state
+  const [perangkatConfig, setPerangkatConfig] = useState<PerangkatKelasConfig | null>(null);
+  const [selectedSekretarisId, setSelectedSekretarisId] = useState<string>('');
+  const [selectedKetuaId, setSelectedKetuaId] = useState<string>('');
+  const [selectedMandatId, setSelectedMandatId] = useState<string>('');
+  const [mandatCatatanInput, setMandatCatatanInput] = useState<string>('');
+  const [todayAttendanceMap, setTodayAttendanceMap] = useState<Record<string, string>>({});
 
   // Print & Surat Modal states
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
@@ -67,7 +83,15 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
           .eq('role', 'siswa')
           .order('nama', { ascending: true });
 
-        setStudents(stdList || []);
+        // Deduplicate students by name to guarantee unique count
+        const seenNames = new Set<string>();
+        const uniqueStudents = (stdList || []).filter(s => {
+          const key = (s.nama || '').trim().toUpperCase();
+          if (seenNames.has(key)) return false;
+          seenNames.add(key);
+          return true;
+        });
+        setStudents(uniqueStudents);
       } catch (err) {
         console.error('Error fetching students for wali:', err);
       } finally {
@@ -79,6 +103,75 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
 
   const activeClass = classes.find(c => c.id === selectedClassId);
   const activeClassName = activeClass?.nama || 'Kelas';
+
+  // Load Perangkat Kelas config & today's attendance for selected class
+  useEffect(() => {
+    if (!selectedClassId) return;
+    const cfg = getPerangkatKelas(selectedClassId, students);
+    setPerangkatConfig(cfg);
+    setSelectedSekretarisId(cfg.sekretarisId || (students[1]?.id || students[0]?.id || ''));
+    setSelectedKetuaId(cfg.ketuaKelasId || (students[0]?.id || ''));
+    setSelectedMandatId(cfg.mandatSiswaId || '');
+    setMandatCatatanInput(cfg.mandatCatatan || '');
+
+    // Fetch today's attendance status to show realtime status of secretary & class president
+    const todayStr = new Date().toISOString().split('T')[0];
+    supabase
+      .from('absen_harian')
+      .select('siswa_id, status')
+      .eq('kelas_id', selectedClassId)
+      .eq('tanggal', todayStr)
+      .then(({ data }) => {
+        const map: Record<string, string> = {};
+        (data || []).forEach((row: any) => {
+          map[row.siswa_id] = row.status;
+        });
+        setTodayAttendanceMap(map);
+      });
+  }, [selectedClassId, students]);
+
+  const handleSavePerangkat = () => {
+    if (!perangkatConfig || !selectedClassId) return;
+    const sekName = students.find(s => s.id === selectedSekretarisId)?.nama || '';
+    const ketuaName = students.find(s => s.id === selectedKetuaId)?.nama || '';
+
+    const updated: PerangkatKelasConfig = {
+      ...perangkatConfig,
+      kelasId: selectedClassId,
+      sekretarisId: selectedSekretarisId,
+      sekretarisNama: sekName,
+      ketuaKelasId: selectedKetuaId,
+      ketuaKelasNama: ketuaName,
+    };
+    savePerangkatKelas(updated);
+    setPerangkatConfig(updated);
+    onShowToast('Tersimpan!', `Sekretaris (${sekName}) dan Ketua Kelas (${ketuaName}) berhasil ditetapkan.`, 'success');
+  };
+
+  const handleToggleMandat = () => {
+    if (!perangkatConfig || !selectedClassId) return;
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isCurrentlyActive = Boolean(perangkatConfig.mandatSiswaId && perangkatConfig.mandatTanggal === todayStr);
+
+    if (isCurrentlyActive) {
+      // Cabut mandat
+      const updated = setMandatHariIni(selectedClassId, null, null);
+      setPerangkatConfig(updated);
+      setSelectedMandatId('');
+      setMandatCatatanInput('');
+      onShowToast('Mandat Dicabut', 'Wewenang khusus mandat darurat telah dinonaktifkan.', 'info');
+    } else {
+      // Aktifkan mandat
+      if (!selectedMandatId) {
+        onShowToast('Pilih Siswa', 'Silakan pilih siswa yang akan diberikan mandat absensi hari ini.', 'warning');
+        return;
+      }
+      const mandatName = students.find(s => s.id === selectedMandatId)?.nama || '';
+      const updated = setMandatHariIni(selectedClassId, selectedMandatId, mandatName, mandatCatatanInput);
+      setPerangkatConfig(updated);
+      onShowToast('Mandat Diaktifkan!', `Wewenang pengisian absensi hari ini diberikan kepada ${mandatName}.`, 'success');
+    }
+  };
 
   // 3. Compute student attendance stats & at-risk ranking
   const { studentStats, atRiskStudents, avgRate, counts } = useMemo(() => {
@@ -300,26 +393,37 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
       <div className="px-4 -mt-3 relative z-10">
         <div className="bg-white rounded-2xl p-1 shadow-md border border-slate-100 flex gap-1">
           <button
+            onClick={() => setActiveTab('perangkat')}
+            className={`flex-1 py-2 px-1 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
+              activeTab === 'perangkat'
+                ? 'bg-indigo-600 text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <span className="material-symbols-outlined notranslate text-[16px]">assignment_ind</span>
+            <span>Perangkat &amp; Mandat</span>
+          </button>
+          <button
             onClick={() => setActiveTab('rawan')}
-            className={`flex-1 py-2 px-1 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-2 px-1 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
               activeTab === 'rawan'
                 ? 'bg-rose-600 text-white shadow-sm'
                 : 'text-slate-600 hover:bg-slate-50'
             }`}
           >
             <span className="material-symbols-outlined notranslate text-[16px]">crisis_alert</span>
-            <span>Radar Siswa Rawan ({atRiskStudents.length})</span>
+            <span>Radar Rawan ({atRiskStudents.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('rekap')}
-            className={`flex-1 py-2 px-1 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-2 px-1 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 ${
               activeTab === 'rekap'
                 ? 'bg-primary text-white shadow-sm'
                 : 'text-slate-600 hover:bg-slate-50'
             }`}
           >
             <span className="material-symbols-outlined notranslate text-[16px]">table_chart</span>
-            <span>Rekapitulasi Kelas</span>
+            <span>Rekap</span>
           </button>
         </div>
       </div>
@@ -330,6 +434,240 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
           <div className="bg-white p-8 rounded-2xl flex flex-col items-center justify-center gap-3 border border-slate-100 shadow-sm">
             <span className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
             <p className="text-slate-400 text-xs font-semibold">Memuat data perwalian {activeClassName}...</p>
+          </div>
+        ) : activeTab === 'perangkat' ? (
+          /* TAB 0: PERANGKAT & MANDAT DELEGASI HARIAN */
+          <div className="flex flex-col gap-4">
+            {/* Banner Penjelasan Alur Hierarki Pengabsen */}
+            <div className="bg-gradient-to-br from-indigo-900 via-[#003d73] to-slate-900 rounded-2xl p-4 text-white shadow-sm border border-indigo-700/30">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined notranslate text-emerald-300 text-[24px]">
+                    account_tree
+                  </span>
+                </div>
+                <div>
+                  <h3 className="font-headline font-bold text-sm text-white">
+                    Alur &amp; Wewenang Presensi Pagi
+                  </h3>
+                  <p className="text-slate-200 text-xs mt-1 leading-relaxed">
+                    Wali Kelas menetapkan <strong>Sekretaris</strong> sebagai pengabsen utama. Jika sekretaris berhalangan (sakit/izin/alfa), wewenang otomatis beralih ke <strong>Ketua Kelas</strong>. Jika keduanya absen, Anda dapat memberikan <strong>Mandat Khusus</strong> ke siswa terpercaya hari ini, atau dilanjutkan oleh <strong>Guru Mapel Jam 1/2/3</strong>.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Status Live Wewenang Pengabsen Hari Ini */}
+            {(() => {
+              const wewenang = getWewenangPengabsenHariIni(
+                selectedClassId,
+                '',
+                todayAttendanceMap,
+                students
+              );
+
+              return (
+                <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex flex-col gap-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="font-headline font-bold text-xs text-slate-800 uppercase tracking-wider">
+                        Status Wewenang Presensi Hari Ini
+                      </span>
+                    </div>
+                    <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">
+                      Langkah #{wewenang.hierarchyStep} dari 4
+                    </span>
+                  </div>
+
+                  <div className="bg-slate-50 rounded-xl p-3 flex items-start gap-3 border border-slate-200/60">
+                    <span className="material-symbols-outlined notranslate text-primary text-[22px] shrink-0 mt-0.5">
+                      {wewenang.hierarchyStep === 1 ? 'verified' : wewenang.hierarchyStep === 2 ? 'warning' : wewenang.hierarchyStep === 3 ? 'star' : 'school'}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-900">
+                        {wewenang.activeOfficerName} ({wewenang.officerTitle})
+                      </p>
+                      <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                        {wewenang.officerReason}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Step indicators */}
+                  <div className="grid grid-cols-4 gap-1.5 pt-1 text-center">
+                    <div className={`p-2 rounded-xl border text-[10px] ${!wewenang.sekretarisAbsent ? 'bg-emerald-50 border-emerald-200 text-emerald-800 font-bold' : 'bg-slate-50 border-slate-200 text-slate-400 line-through'}`}>
+                      <span>1. Sekretaris</span>
+                    </div>
+                    <div className={`p-2 rounded-xl border text-[10px] ${wewenang.sekretarisAbsent && !wewenang.ketuaAbsent ? 'bg-amber-50 border-amber-200 text-amber-800 font-bold ring-1 ring-amber-300' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
+                      <span>2. Ketua Kelas</span>
+                    </div>
+                    <div className={`p-2 rounded-xl border text-[10px] ${wewenang.hierarchyStep === 3 ? 'bg-emerald-50 border-emerald-200 text-emerald-800 font-bold ring-1 ring-emerald-300' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
+                      <span>3. Mandat Wali</span>
+                    </div>
+                    <div className={`p-2 rounded-xl border text-[10px] ${wewenang.hierarchyStep === 4 ? 'bg-blue-50 border-blue-200 text-blue-800 font-bold ring-1 ring-blue-300' : 'bg-slate-50 border-slate-200 text-slate-400'}`}>
+                      <span>4. Guru Mapel</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Form Penetapan Sekretaris & Ketua Kelas */}
+            <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex flex-col gap-3.5">
+              <h4 className="font-headline font-bold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="material-symbols-outlined notranslate text-primary text-[18px]">badge</span>
+                <span>Penetapan Perangkat Kelas Resmi</span>
+              </h4>
+
+              {/* Pilih Sekretaris */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>Sekretaris Kelas (Petugas Utama):</span>
+                  {selectedSekretarisId && (
+                    <span className="text-[10px] text-primary font-semibold">
+                      Status Hari Ini: {todayAttendanceMap[selectedSekretarisId] || 'Belum Diabsen'}
+                    </span>
+                  )}
+                </label>
+                <select
+                  value={selectedSekretarisId}
+                  onChange={(e) => setSelectedSekretarisId(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">-- Pilih Siswa Sebagai Sekretaris --</option>
+                  {students.map((s, idx) => (
+                    <option key={s.id} value={s.id}>
+                      {idx + 1}. {s.nama} ({s.username})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[11px] text-slate-400">
+                  Default pengabsen harian di pagi hari saat jam masuk sekolah.
+                </p>
+              </div>
+
+              {/* Pilih Ketua Kelas */}
+              <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-100">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                  <span>Ketua Kelas (Pengganti ke-1):</span>
+                  {selectedKetuaId && (
+                    <span className="text-[10px] text-amber-600 font-semibold">
+                      Status Hari Ini: {todayAttendanceMap[selectedKetuaId] || 'Belum Diabsen'}
+                    </span>
+                  )}
+                </label>
+                <select
+                  value={selectedKetuaId}
+                  onChange={(e) => setSelectedKetuaId(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="">-- Pilih Siswa Sebagai Ketua Kelas --</option>
+                  {students.map((s, idx) => (
+                    <option key={s.id} value={s.id}>
+                      {idx + 1}. {s.nama} ({s.username})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[11px] text-slate-400">
+                  Otomatis mengambil alih pengisian presensi jika Sekretaris sakit, izin, atau alfa.
+                </p>
+              </div>
+
+              <button
+                onClick={handleSavePerangkat}
+                className="mt-2 w-full py-2.5 px-4 rounded-xl bg-primary hover:bg-[#004e84] text-white text-xs font-bold shadow-sm transition flex items-center justify-center gap-1.5"
+              >
+                <span className="material-symbols-outlined notranslate text-[16px]">save</span>
+                <span>Simpan Perangkat Kelas</span>
+              </button>
+            </div>
+
+            {/* Seksi Mandat Darurat Hari Ini */}
+            <div className="bg-white rounded-2xl p-4 border border-emerald-100 shadow-sm flex flex-col gap-3.5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-full blur-2xl -z-10" />
+              
+              <div className="flex items-center justify-between">
+                <h4 className="font-headline font-bold text-xs text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="material-symbols-outlined notranslate text-emerald-600 text-[18px]">verified_user</span>
+                  <span>Mandat Darurat Wali Kelas Hari Ini</span>
+                </h4>
+                {Boolean(perangkatConfig?.mandatSiswaId && perangkatConfig?.mandatTanggal === new Date().toISOString().split('T')[0]) && (
+                  <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
+                    MANDAT AKTIF
+                  </span>
+                )}
+              </div>
+
+              <p className="text-slate-600 text-xs leading-relaxed">
+                Gunakan fitur ini jika <strong>Sekretaris dan Ketua Kelas keduanya tidak masuk</strong>, dan belum ada guru pengabsen. Anda sebagai Wali Kelas dapat menunjuk satu siswa yang Anda percayai untuk mengabsen kelas hari ini.
+              </p>
+
+              {/* Status Box Mandat Aktif */}
+              {Boolean(perangkatConfig?.mandatSiswaId && perangkatConfig?.mandatTanggal === new Date().toISOString().split('T')[0]) ? (
+                <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-200 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] text-emerald-700 font-semibold">Siswa Penerima Mandat:</p>
+                      <p className="text-xs font-bold text-emerald-950">{perangkatConfig?.mandatSiswaNama}</p>
+                    </div>
+                    <button
+                      onClick={handleToggleMandat}
+                      className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold shadow-xs transition flex items-center gap-1"
+                    >
+                      <span className="material-symbols-outlined notranslate text-[14px]">cancel</span>
+                      <span>Cabut Mandat</span>
+                    </button>
+                  </div>
+                  {perangkatConfig?.mandatCatatan && (
+                    <p className="text-[11px] text-emerald-800 italic bg-white/70 p-2 rounded-lg border border-emerald-100">
+                      Pesan Wali Kelas: &ldquo;{perangkatConfig.mandatCatatan}&rdquo;
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2.5">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">
+                      Pilih Siswa Terpercaya:
+                    </label>
+                    <select
+                      value={selectedMandatId}
+                      onChange={(e) => setSelectedMandatId(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="">-- Pilih Siswa Untuk Diberi Mandat --</option>
+                      {students.map((s, idx) => (
+                        <option key={s.id} value={s.id}>
+                          {idx + 1}. {s.nama} ({s.username})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">
+                      Pesan / Instruksi Wali Kelas (Opsional):
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Tolong bantu absenkan teman-teman kelas kita hari ini ya..."
+                      value={mandatCatatanInput}
+                      onChange={(e) => setMandatCatatanInput(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleToggleMandat}
+                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition flex items-center justify-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined notranslate text-[16px]">verified</span>
+                    <span>Beri Mandat Absen Hari Ini</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         ) : activeTab === 'rawan' ? (
           /* TAB 1: RADAR SISWA RAWAN */
