@@ -15,8 +15,8 @@ export const USER_PROFILES: Record<string, UserProfile> = {
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCYnt2a-k9qr2VrGiR_aaNyxA0kr0zTUoyDij-XJB6qo6dMjg8FwbnhLqNO9exCCHBmngm533nSRqYmZP6JCfHuekrOs7MIEzSxrxLB3Y9p7b6kz_vmOcu2eVdHJ6K2OBzJzjnQsNXJJ0L4yaOC2pFWOq5kT9LmUjuf-Ic0KY7KPRI5lxlTQxwOck9ly6Z0aUijW0_dwOqKrQ8upujFgHbM-wse0kY5Sq_d0DVyjWeOjp5SyzN_Htoh',
     nipOrNisnLabel: 'NISN Siswa',
     isAtSchool: true,
-    attendanceRate: 98.5,
-    streakDays: 18,
+    attendanceRate: 0,
+    streakDays: 0,
   },
   siswa: {
     id: 'user-siswa',
@@ -30,8 +30,8 @@ export const USER_PROFILES: Record<string, UserProfile> = {
       'https://lh3.googleusercontent.com/aida-public/AB6AXuB6ATs24ewyqE0mhqdjvOhidGqazm6XbMOZqLh9sxXUkf7ISKL4MdTBMlnpgMmsFBSLh0J2yaVuSi9j2P4KMoG5ENBLJ6BxxwdUqYLjnIMpTGfDjF_qkJPrxLEtKugoAHsTvrDCoKADfBRR3zR4KCWxDA7O5bBmp1gsN8eC8OfDXxAlG1V-r63VAH8qn2UNm3lmGNx4BzNdS71bWPweBcczZt-gOjQCPCZo24bqMCjQaDW49tuGWDwz',
     nipOrNisnLabel: 'NISN Siswa',
     isAtSchool: true,
-    attendanceRate: 99.1,
-    streakDays: 24,
+    attendanceRate: 0,
+    streakDays: 0,
   },
   guru: {
     id: 'user-budi',
@@ -45,8 +45,8 @@ export const USER_PROFILES: Record<string, UserProfile> = {
       'https://lh3.googleusercontent.com/aida-public/AB6AXuBsjqqNUms7en4dEsFynEe-Ynj70m9IRBQFAt4kd0q0EC86X5bcowEuKK7P8ESzZQ1GnZPacrA3xHhBPbyzvPgqXjtQzmUdbHn5A7iE7Obpm-e1QLGdAx5Fk04s125mVdFFPsqg4ka06-5JLRBZyHIjrxP65z71ILzB2zNoP6IS7AlEXCqB9WSOVtmqXTEZnVAJ_PElhjC9ooSUx9lDAf0vqxN8gwIyRKMT7mD_nWG0YUat6Ke_v5Cn',
     nipOrNisnLabel: 'NIP Guru',
     isAtSchool: true,
-    attendanceRate: 100,
-    streakDays: 45,
+    attendanceRate: 0,
+    streakDays: 0,
   },
   operator: {
     id: 'user-admin',
@@ -60,19 +60,19 @@ export const USER_PROFILES: Record<string, UserProfile> = {
       'https://lh3.googleusercontent.com/aida/AEtjO1W9rn4mcj87694X5B7-tJf8vbX-pFRuzXwmhdsD5w4Qze3r9vtvq6sodoyDWrU8inQpDWXYhQGVEfyxGOGWGgeod-ls4ZaYU-EijnOzzhiSoCKbd7GFi_C9zrRyBN1I0Nupm6o-oWwc1yAVFvfvtmWNNmEc87K-Bxa6bgul49AqIfXlG8byA0IaWSOFsdDNYPMPqhvYvtklYA-uNaseHw0YkMpiyIlZD_q7ofJ3VIZr3AFQpgsDRHQGkSw',
     nipOrNisnLabel: 'ID Operator',
     isAtSchool: true,
-    attendanceRate: 100,
-    streakDays: 90,
+    attendanceRate: 0,
+    streakDays: 0,
   },
 };
 
 export const INITIAL_CLASS_SUMMARY: ClassAttendanceSummary = {
   className: 'XI RPL 1',
   totalStudents: 34,
-  present: 31,
-  sick: 2,
-  permitted: 1,
+  present: 0,
+  sick: 0,
+  permitted: 0,
   unexcused: 0,
-  validationStatus: 'menunggu_acc',
+  validationStatus: 'draft',
 };
 
 export const INITIAL_STUDENTS: StudentAttendance[] = [
@@ -95,9 +95,7 @@ export const INITIAL_STUDENTS: StudentAttendance[] = [
     avatarUrl:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuANGP7Qqs7Gjw1CHcqTcVhs3PlExZDDCzgVlCZRfOVdQ_DutWS6YziETQdAvETSTySizRn97ULIu3HKrmeI5RjOdH7AlkmyII-f4ziAsn4w9ILX-dOk1Lrb7oE8skkO01gWDPL3IhxCmBAz_tcECX09yqDMVY5YyXHEl2ciK4thc3a0VBdN2-y7M6yv7ZCJNEy6aGabeS9Ga2jUjkBEH3hU_M58gIHrmvwxM1rR8hHnIVcLnRyRB5a8',
     morningStatus: 'hadir',
-    morningCheckInTime: '06.58 WIT',
-    subjectStatus: 'bolos',
-    note: 'Terdeteksi tidak ada di Lab RPL 2 saat jam pelajaran',
+    subjectStatus: 'hadir',
   },
   {
     id: 'std-3',
@@ -107,7 +105,6 @@ export const INITIAL_STUDENTS: StudentAttendance[] = [
     avatarUrl:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuB6ATs24ewyqE0mhqdjvOhidGqazm6XbMOZqLh9sxXUkf7ISKL4MdTBMlnpgMmsFBSLh0J2yaVuSi9j2P4KMoG5ENBLJ6BxxwdUqYLjnIMpTGfDjF_qkJPrxLEtKugoAHsTvrDCoKADfBRR3zR4KCWxDA7O5bBmp1gsN8eC8OfDXxAlG1V-r63VAH8qn2UNm3lmGNx4BzNdS71bWPweBcczZt-gOjQCPCZo24bqMCjQaDW49tuGWDwz',
     morningStatus: 'hadir',
-    morningCheckInTime: '06:50 WIT',
     subjectStatus: 'hadir',
   },
   {
@@ -117,9 +114,8 @@ export const INITIAL_STUDENTS: StudentAttendance[] = [
     nisn: '0058291055',
     avatarUrl:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCYtVadvsmDFMwbnpURLpogQCUfl4E1MBROuSv_GucxKYxpmGJy2I0sjbmxVSLqER3V_3CnMfKeRcFGq109tS8rhMfPYYFDTaTpZ0yhjbkd9P5xnI-WTCwh9E99mWrZb5-DA2i9ETZ7iPrxl9PnIOSZDdjNMsiqoUx7s9FgQUnl_-zq9pBaCYQGEeMd_ZkH-Tciho5Y3ls9uhxRghP5DrEN2CAWlhXYU0RRFAVrjOqNB3NeWQhmuh4D',
-    morningStatus: 'izin',
-    note: 'Dispensasi Lomba LKS Web',
-    subjectStatus: 'dispensasi',
+    morningStatus: 'hadir',
+    subjectStatus: 'hadir',
   },
   {
     id: 'std-5',
@@ -128,9 +124,8 @@ export const INITIAL_STUDENTS: StudentAttendance[] = [
     nisn: '0058291008',
     avatarUrl:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCYnt2a-k9qr2VrGiR_aaNyxA0kr0zTUoyDij-XJB6qo6dMjg8FwbnhLqNO9exCCHBmngm533nSRqYmZP6JCfHuekrOs7MIEzSxrxLB3Y9p7b6kz_vmOcu2eVdHJ6K2OBzJzjnQsNXJJ0L4yaOC2pFWOq5kT9LmUjuf-Ic0KY7KPRI5lxlTQxwOck9ly6Z0aUijW0_dwOqKrQ8upujFgHbM-wse0kY5Sq_d0DVyjWeOjp5SyzN_Htoh',
-    morningStatus: 'sakit',
-    note: 'Sakit Demam (Surat Dokter Klinik Pelabuhan Terlampir)',
-    subjectStatus: 'dispensasi',
+    morningStatus: 'hadir',
+    subjectStatus: 'hadir',
   },
   {
     id: 'std-6',
@@ -139,9 +134,8 @@ export const INITIAL_STUDENTS: StudentAttendance[] = [
     nisn: '0058291014',
     avatarUrl:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuB6ATs24ewyqE0mhqdjvOhidGqazm6XbMOZqLh9sxXUkf7ISKL4MdTBMlnpgMmsFBSLh0J2yaVuSi9j2P4KMoG5ENBLJ6BxxwdUqYLjnIMpTGfDjF_qkJPrxLEtKugoAHsTvrDCoKADfBRR3zR4KCWxDA7O5bBmp1gsN8eC8OfDXxAlG1V-r63VAH8qn2UNm3lmGNx4BzNdS71bWPweBcczZt-gOjQCPCZo24bqMCjQaDW49tuGWDwz',
-    morningStatus: 'izin',
-    note: 'Dispensasi Lomba FLS2N Daerah (Surat Kesiswaan Terlampir)',
-    subjectStatus: 'dispensasi',
+    morningStatus: 'hadir',
+    subjectStatus: 'hadir',
   },
   {
     id: 'std-7',
@@ -150,9 +144,8 @@ export const INITIAL_STUDENTS: StudentAttendance[] = [
     nisn: '0058291023',
     avatarUrl:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuB6ATs24ewyqE0mhqdjvOhidGqazm6XbMOZqLh9sxXUkf7ISKL4MdTBMlnpgMmsFBSLh0J2yaVuSi9j2P4KMoG5ENBLJ6BxxwdUqYLjnIMpTGfDjF_qkJPrxLEtKugoAHsTvrDCoKADfBRR3zR4KCWxDA7O5bBmp1gsN8eC8OfDXxAlG1V-r63VAH8qn2UNm3lmGNx4BzNdS71bWPweBcczZt-gOjQCPCZo24bqMCjQaDW49tuGWDwz',
-    morningStatus: 'sakit',
-    note: 'Demam flu rawat jalan',
-    subjectStatus: 'dispensasi',
+    morningStatus: 'hadir',
+    subjectStatus: 'hadir',
   },
 ];
 

@@ -15,8 +15,8 @@ export const USER_PROFILES: Record<string, UserProfile> = {
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCYnt2a-k9qr2VrGiR_aaNyxA0kr0zTUoyDij-XJB6qo6dMjg8FwbnhLqNO9exCCHBmngm533nSRqYmZP6JCfHuekrOs7MIEzSxrxLB3Y9p7b6kz_vmOcu2eVdHJ6K2OBzJzjnQsNXJJ0L4yaOC2pFWOq5kT9LmUjuf-Ic0KY7KPRI5lxlTQxwOck9ly6Z0aUijW0_dwOqKrQ8upujFgHbM-wse0kY5Sq_d0DVyjWeOjp5SyzN_Htoh',
     nipOrNisnLabel: 'NISN Siswa',
     isAtSchool: true,
-    attendanceRate: 98.5,
-    streakDays: 18,
+    attendanceRate: 0,
+    streakDays: 0,
   },
   siswa: {
     id: 'user-siswa',
@@ -32,8 +32,8 @@ export const USER_PROFILES: Record<string, UserProfile> = {
       'https://lh3.googleusercontent.com/aida-public/AB6AXuB6ATs24ewyqE0mhqdjvOhidGqazm6XbMOZqLh9sxXUkf7ISKL4MdTBMlnpgMmsFBSLh0J2yaVuSi9j2P4KMoG5ENBLJ6BxxwdUqYLjnIMpTGfDjF_qkJPrxLEtKugoAHsTvrDCoKADfBRR3zR4KCWxDA7O5bBmp1gsN8eC8OfDXxAlG1V-r63VAH8qn2UNm3lmGNx4BzNdS71bWPweBcczZt-gOjQCPCZo24bqMCjQaDW49tuGWDwz',
     nipOrNisnLabel: 'NISN Siswa',
     isAtSchool: true,
-    attendanceRate: 99.1,
-    streakDays: 24,
+    attendanceRate: 0,
+    streakDays: 0,
   },
   guru: {
     id: 'user-budi',
@@ -47,8 +47,8 @@ export const USER_PROFILES: Record<string, UserProfile> = {
       'https://lh3.googleusercontent.com/aida-public/AB6AXuBsjqqNUms7en4dEsFynEe-Ynj70m9IRBQFAt4kd0q0EC86X5bcowEuKK7P8ESzZQ1GnZPacrA3xHhBPbyzvPgqXjtQzmUdbHn5A7iE7Obpm-e1QLGdAx5Fk04s125mVdFFPsqg4ka06-5JLRBZyHIjrxP65z71ILzB2zNoP6IS7AlEXCqB9WSOVtmqXTEZnVAJ_PElhjC9ooSUx9lDAf0vqxN8gwIyRKMT7mD_nWG0YUat6Ke_v5Cn',
     nipOrNisnLabel: 'NIP Guru',
     isAtSchool: true,
-    attendanceRate: 100,
-    streakDays: 45,
+    attendanceRate: 0,
+    streakDays: 0,
   },
   operator: {
     id: 'user-admin',
@@ -62,19 +62,19 @@ export const USER_PROFILES: Record<string, UserProfile> = {
       'https://lh3.googleusercontent.com/aida/AEtjO1W9rn4mcj87694X5B7-tJf8vbX-pFRuzXwmhdsD5w4Qze3r9vtvq6sodoyDWrU8inQpDWXYhQGVEfyxGOGWGgeod-ls4ZaYU-EijnOzzhiSoCKbd7GFi_C9zrRyBN1I0Nupm6o-oWwc1yAVFvfvtmWNNmEc87K-Bxa6bgul49AqIfXlG8byA0IaWSOFsdDNYPMPqhvYvtklYA-uNaseHw0YkMpiyIlZD_q7ofJ3VIZr3AFQpgsDRHQGkSw',
     nipOrNisnLabel: 'ID Operator',
     isAtSchool: true,
-    attendanceRate: 100,
-    streakDays: 90,
+    attendanceRate: 0,
+    streakDays: 0,
   },
 };
 
 export const INITIAL_CLASS_SUMMARY: ClassAttendanceSummary = {
   className: 'XII TKJ 1',
   totalStudents: 34,
-  present: 31,
-  sick: 2,
-  permitted: 1,
+  present: 0,
+  sick: 0,
+  permitted: 0,
   unexcused: 0,
-  validationStatus: 'menunggu_acc',
+  validationStatus: 'draft',
 };
 
 export const INITIAL_STUDENTS: StudentAttendance[] = [

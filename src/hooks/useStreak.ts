@@ -21,13 +21,14 @@ export function useStreak(siswaId: string | null) {
       });
   }, [siswaId]);
 
-  // Render label & icon berdasarkan status
-  const streakIcon = streak?.status === 'aktif' ? '🔥'
-    : streak?.status === 'beku' ? '❄️' : '💤';
+  // Render label & icon berdasarkan status (fitur api hanya aktif jika >= 3 hari berturut-turut)
   const streakDays = streak?.jumlah ?? 0;
+  const isStreakVisible = streakDays >= 3;
+  const streakIcon = isStreakVisible && streak?.status === 'aktif' ? '🔥'
+    : streak?.status === 'beku' ? '❄️' : '💤';
   const streakStatus = streak?.status ?? 'padam';
 
-  return { streak, loading, streakIcon, streakDays, streakStatus };
+  return { streak, loading, streakIcon, streakDays, streakStatus, isStreakVisible };
 }
 
 // src/hooks/usePanggilGuru.ts

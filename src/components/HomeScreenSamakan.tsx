@@ -601,44 +601,46 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
             </div>
           </div>
 
-          {/* Streak Api Kehadiran Sub-Pill */}
-          <div
-            onClick={() =>
-              onShowToast(
-                'Lencana Disiplin Sorong 🔥',
-                `Hebat! Anda telah hadir tepat waktu ${user.streakDays} hari berturut-turut tanpa terlambat.`,
-                'success'
-              )
-            }
-            className="relative z-10 bg-white/15 hover:bg-white/20 backdrop-blur-md rounded-xl p-2.5 flex items-center justify-between cursor-pointer transition-all active:scale-[0.99]"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center shadow-md animate-pulse">
-                <span
-                  className="material-symbols-outlined notranslate text-amber-950 text-[20px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  local_fire_department
-                </span>
-              </div>
-              <div>
-                <div className="flex items-center gap-1">
-                  <span className="font-label-sm text-xs text-white font-bold">
-                    {user.streakDays} Hari Berturut-turut!
-                  </span>
-                  <span className="px-1.5 py-0.2 rounded bg-amber-400 text-amber-950 font-label-sm text-[10px] font-bold">
-                    STREAK 🔥
+          {/* Streak Api Kehadiran Sub-Pill - Hanya muncul ketika siswa hadir >= 3 hari berturut-turut */}
+          {user.streakDays >= 3 && (
+            <div
+              onClick={() =>
+                onShowToast(
+                  'Lencana Disiplin Sorong 🔥',
+                  `Hebat! Anda telah hadir tepat waktu ${user.streakDays} hari berturut-turut tanpa terlambat.`,
+                  'success'
+                )
+              }
+              className="relative z-10 bg-white/15 hover:bg-white/20 backdrop-blur-md rounded-xl p-2.5 flex items-center justify-between cursor-pointer transition-all active:scale-[0.99]"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center shadow-md animate-pulse">
+                  <span
+                    className="material-symbols-outlined notranslate text-amber-950 text-[20px]"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    local_fire_department
                   </span>
                 </div>
-                <p className="font-body text-[11px] text-primary-fixed leading-tight">
-                  Pertahankan untuk lencana Siswa Disiplin Sorong
-                </p>
+                <div>
+                  <div className="flex items-center gap-1">
+                    <span className="font-label-sm text-xs text-white font-bold">
+                      {user.streakDays} Hari Berturut-turut!
+                    </span>
+                    <span className="px-1.5 py-0.2 rounded bg-amber-400 text-amber-950 font-label-sm text-[10px] font-bold">
+                      STREAK 🔥
+                    </span>
+                  </div>
+                  <p className="font-body text-[11px] text-primary-fixed leading-tight">
+                    Pertahankan untuk lencana Siswa Disiplin Sorong
+                  </p>
+                </div>
               </div>
+              <span className="material-symbols-outlined notranslate text-primary-fixed text-[20px]">
+                chevron_right
+              </span>
             </div>
-            <span className="material-symbols-outlined notranslate text-primary-fixed text-[20px]">
-              chevron_right
-            </span>
-          </div>
+          )}
         </div>
       </div>
 
@@ -1122,13 +1124,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ( {
 
             <div className="grid grid-cols-2 gap-2 text-center">
               <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                <span className="text-2xl font-bold text-emerald-700">98.5%</span>
+                <span className="text-2xl font-bold text-emerald-700">{user.attendanceRate || 0}%</span>
                 <span className="block text-xs text-slate-600 mt-0.5 font-semibold">
                   Tingkat Kehadiran
                 </span>
               </div>
               <div className="p-3 bg-sky-50 rounded-xl border border-sky-100">
-                <span className="text-2xl font-bold text-sky-700">22 Hari</span>
+                <span className="text-2xl font-bold text-sky-700">0 Hari</span>
                 <span className="block text-xs text-slate-600 mt-0.5 font-semibold">
                   Hari Efektif KBM
                 </span>

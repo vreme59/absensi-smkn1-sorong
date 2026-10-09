@@ -310,13 +310,8 @@ export const ValidasiGuruScreen: React.FC<ValidasiGuruScreenProps> = ({
     const currentMulti = multipliers[selectedPeriode];
     const totalMeetings = currentMulti.sessions;
 
-    // Student individual stats for selected period
+    // Student individual stats for selected period (data nyata tanpa fake hash)
     const studentStats = students.map((s, idx) => {
-      const hash = (s.id || '').split('').reduce((acc: number, c: string) => acc + c.charCodeAt(0), idx);
-      const isOccasionalSick = hash % 9 === 0;
-      const isOccasionalPermit = hash % 13 === 0;
-      const isRareAlpha = hash % 29 === 0;
-
       let sCount = 0;
       let iCount = 0;
       let aCount = 0;
@@ -332,29 +327,18 @@ export const ValidasiGuruScreen: React.FC<ValidasiGuruScreenProps> = ({
         else if (cur === 'Izin') iCount = 1;
         else if (cur === 'Alfa') aCount = 1;
         else if (cur === 'Terlambat') tCount = 1;
-      } else if (selectedPeriode === '1_minggu') {
-        sCount = isOccasionalSick ? 1 : 0;
-        iCount = isOccasionalPermit ? 1 : 0;
-        aCount = isRareAlpha ? 1 : 0;
-        if (attendance[s.id] === 'Sakit') sCount = Math.max(1, sCount);
-        if (attendance[s.id] === 'Izin') iCount = Math.max(1, iCount);
-        if (attendance[s.id] === 'Alfa') aCount = Math.max(1, aCount);
-      } else if (selectedPeriode === '1_bulan') {
-        sCount = isOccasionalSick ? 1 : 0;
-        iCount = isOccasionalPermit ? 1 : 0;
-        aCount = isRareAlpha ? 1 : 0;
-        tCount = (hash % 7 === 0) ? 1 : 0;
       } else {
-        // semester
-        sCount = (hash % 5 === 0) ? 2 : (isOccasionalSick ? 1 : 0);
-        iCount = (hash % 6 === 0) ? 2 : (isOccasionalPermit ? 1 : 0);
-        aCount = (hash % 17 === 0) ? 1 : 0;
-        tCount = (hash % 4 === 0) ? 3 : 1;
+        const cur = attendance[s.id];
+        if (cur === 'Sakit') sCount = 1;
+        else if (cur === 'Izin') iCount = 1;
+        else if (cur === 'Alfa') aCount = 1;
+        else if (cur === 'Terlambat') tCount = 1;
       }
 
       const absentTotal = sCount + iCount + aCount;
-      const hCount = Math.max(0, totalMeetings - absentTotal);
-      const studentRate = Math.min(100, Math.round(((hCount + tCount) / totalMeetings) * 100));
+      const hCount = (attendance[s.id] === 'Hadir' || (!attendance[s.id] && selectedPeriode === 'hari_ini')) ? 1 : 0;
+      const recordedMeetings = hCount + tCount + absentTotal;
+      const studentRate = recordedMeetings > 0 ? Math.min(100, Math.round(((hCount + tCount) / recordedMeetings) * 100)) : 0;
 
       return {
         ...s,

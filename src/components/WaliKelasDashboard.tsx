@@ -3,7 +3,6 @@ import { UserProfile } from '../types';
 import { supabase } from '../lib/supabase';
 import { exportAttendanceToExcel, StudentRecapItem } from '../utils/exportAttendance';
 import { CetakRekapModal } from './CetakRekapModal';
-import { SuratPanggilanModal, SuratPanggilanData } from './SuratPanggilanModal';
 
 import {
   getPerangkatKelas,
@@ -40,9 +39,9 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
   const [mandatCatatanInput, setMandatCatatanInput] = useState<string>('');
   const [todayAttendanceMap, setTodayAttendanceMap] = useState<Record<string, string>>({});
 
-  // Print & Surat Modal states
+  // Print Modal state
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
-  const [selectedSuratData, setSelectedSuratData] = useState<SuratPanggilanData | null>(null);
+  const [periodRecords, setPeriodRecords] = useState<any[]>([]);
 
   // Filter period for Rekap tab
   const [selectedPeriod, setSelectedPeriod] = useState<'hari_ini' | '1_minggu' | '1_bulan' | 'semester'>('semester');
@@ -130,6 +129,44 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
       });
   }, [selectedClassId, students]);
 
+  // Fetch real attendance records from absen_harian for period recap
+  useEffect(() => {
+    if (!selectedClassId) {
+      setPeriodRecords([]);
+      return;
+    }
+
+    async function loadPeriodAttendance() {
+      try {
+        let query = supabase
+          .from('absen_harian')
+          .select('siswa_id, status, tanggal')
+          .eq('kelas_id', selectedClassId);
+
+        const now = new Date();
+        if (selectedPeriod === 'hari_ini') {
+          const todayStr = now.toISOString().split('T')[0];
+          query = query.eq('tanggal', todayStr);
+        } else if (selectedPeriod === '1_minggu') {
+          const d = new Date();
+          d.setDate(d.getDate() - 7);
+          query = query.gte('tanggal', d.toISOString().split('T')[0]);
+        } else if (selectedPeriod === '1_bulan') {
+          const d = new Date();
+          d.setDate(d.getDate() - 30);
+          query = query.gte('tanggal', d.toISOString().split('T')[0]);
+        }
+
+        const { data } = await query;
+        setPeriodRecords(data || []);
+      } catch (e) {
+        console.error('Error fetching period records:', e);
+      }
+    }
+
+    loadPeriodAttendance();
+  }, [selectedClassId, selectedPeriod]);
+
   const handleSavePerangkat = () => {
     if (!perangkatConfig || !selectedClassId) return;
     const sekName = students.find(s => s.id === selectedSekretarisId)?.nama || '';
@@ -173,71 +210,41 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
     }
   };
 
-  // 3. Compute student attendance stats & at-risk ranking
+  // 3. Compute student attendance stats & at-risk ranking dari data riil periodRecords
   const { studentStats, atRiskStudents, avgRate, counts } = useMemo(() => {
-    const totalMeetings = selectedPeriod === 'hari_ini' ? 1 : selectedPeriod === '1_minggu' ? 5 : selectedPeriod === '1_bulan' ? 20 : 76;
-    
-    const stats = students.map((s, idx) => {
-      const hash = (s.id || '').split('').reduce((acc: number, c: string) => acc + c.charCodeAt(0), idx);
+    // Map records by student id
+    const recordsByStudent: Record<string, any[]> = {};
+    (periodRecords || []).forEach(r => {
+      if (!recordsByStudent[r.siswa_id]) recordsByStudent[r.siswa_id] = [];
+      recordsByStudent[r.siswa_id].push(r);
+    });
 
+    const stats = students.map((s, idx) => {
+      const studentRecs = recordsByStudent[s.id] || [];
+      let hCount = 0;
+      let tCount = 0;
       let sCount = 0;
       let iCount = 0;
       let aCount = 0;
-      let tCount = 0;
 
-      if (selectedPeriod === 'hari_ini') {
-        const isAbsentToday = hash % 11 === 0;
-        const isLateToday = hash % 7 === 0;
-        if (isAbsentToday) {
-          if (hash % 3 === 0) sCount = 1;
-          else if (hash % 2 === 0) iCount = 1;
-          else aCount = 1;
-        } else if (isLateToday) {
-          tCount = 1;
-        }
-      } else if (selectedPeriod === '1_minggu') {
-        sCount = hash % 9 === 0 ? 1 : 0;
-        iCount = hash % 13 === 0 ? 1 : 0;
-        aCount = hash % 19 === 0 ? 2 : (hash % 29 === 0 ? 1 : 0);
-      } else if (selectedPeriod === '1_bulan') {
-        sCount = hash % 8 === 0 ? 1 : 0;
-        iCount = hash % 11 === 0 ? 1 : 0;
-        aCount = hash % 14 === 0 ? 3 : (hash % 23 === 0 ? 1 : 0);
-        tCount = hash % 6 === 0 ? 2 : 0;
-      } else {
-        // semester: some students have chronic absences (Alfa >= 3 or 5)
-        const isChronic = hash % 8 === 0;
-        const isMedium = hash % 5 === 0;
+      studentRecs.forEach(r => {
+        if (r.status === 'Hadir') hCount++;
+        else if (r.status === 'Terlambat') tCount++;
+        else if (r.status === 'Sakit') sCount++;
+        else if (r.status === 'Izin') iCount++;
+        else if (r.status === 'Alfa') aCount++;
+      });
 
-        if (isChronic) {
-          aCount = 4 + (hash % 4); // 4-7 days Alfa
-          sCount = 2 + (hash % 2);
-          iCount = 1;
-          tCount = 3;
-        } else if (isMedium) {
-          aCount = 2 + (hash % 2); // 2-3 days Alfa
-          sCount = 1;
-          iCount = 1;
-          tCount = 2;
-        } else {
-          aCount = hash % 15 === 0 ? 1 : 0;
-          sCount = hash % 4 === 0 ? 1 : 0;
-          iCount = hash % 7 === 0 ? 1 : 0;
-          tCount = hash % 5 === 0 ? 1 : 0;
-        }
-      }
+      const totalRecorded = hCount + tCount + sCount + iCount + aCount;
+      const rate = totalRecorded > 0 ? Math.min(100, Math.round(((hCount + tCount) / totalRecorded) * 100)) : 0;
 
-      const totalAbsent = sCount + iCount + aCount;
-      const hCount = Math.max(0, totalMeetings - totalAbsent);
-      const rate = Math.min(100, Math.round(((hCount + tCount) / totalMeetings) * 100));
-
-      // Risk Level
+      // Risk Level berdasarkan data kehadiran nyata
       let riskLevel: 'safe' | 'warning' | 'alert' | 'critical' = 'safe';
-      if (aCount >= 4 || rate < 70) {
+      if (aCount >= 4 || (totalRecorded >= 4 && rate < 70)) {
         riskLevel = 'critical';
-      } else if (aCount >= 2 || rate < 80) {
+      } else if (aCount >= 2 || (totalRecorded >= 4 && rate < 80)) {
         riskLevel = 'alert';
-      } else if (aCount >= 1 || rate < 85) {
+      } else if (aCount >= 1 || (totalRecorded >= 4 && rate < 85)) {
         riskLevel = 'warning';
       }
 
@@ -250,7 +257,7 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
         sakit: sCount,
         izin: iCount,
         alfa: aCount,
-        totalPertemuan: totalMeetings,
+        totalPertemuan: totalRecorded,
         rate,
         riskLevel,
       };
@@ -265,8 +272,8 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
     const aggS = stats.reduce((acc, s) => acc + s.sakit, 0);
     const aggI = stats.reduce((acc, s) => acc + s.izin, 0);
     const aggA = stats.reduce((acc, s) => acc + s.alfa, 0);
-    const totalEntries = totalMeetings * (students.length || 1);
-    const overallRate = totalEntries > 0 ? Math.round(((aggH + aggT) / totalEntries) * 100) : 100;
+    const totalEntries = aggH + aggT + aggS + aggI + aggA;
+    const overallRate = totalEntries > 0 ? Math.round(((aggH + aggT) / totalEntries) * 100) : 0;
 
     return {
       studentStats: stats,
@@ -274,37 +281,7 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
       avgRate: overallRate,
       counts: { Hadir: aggH, Terlambat: aggT, Sakit: aggS, Izin: aggI, Alfa: aggA },
     };
-  }, [students, selectedPeriod]);
-
-  // Open Surat Panggilan generator modal
-  const handleOpenSuratModal = (siswa: any) => {
-    const nextMonday = new Date();
-    nextMonday.setDate(nextMonday.getDate() + ((1 + 7 - nextMonday.getDay()) % 7 || 7));
-    const nextMondayStr = nextMonday.toLocaleDateString('id-ID', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-
-    const randomLetterNo = `421.5/${String(Math.floor(100 + Math.random() * 900))}/SMKN1-SRG/${new Date().getMonth() + 1}/${new Date().getFullYear()}`;
-
-    setSelectedSuratData({
-      nomorSurat: randomLetterNo,
-      namaSiswa: siswa.nama,
-      nisn: siswa.nisn,
-      kelas: activeClassName,
-      namaOrtu: `Orang Tua / Wali dari ${siswa.nama}`,
-      nomorHpOrtu: siswa.phone || '081248000000',
-      alasan: `Tercatat tidak hadir tanpa keterangan (Alfa) sebanyak ${siswa.alfa} hari belajar pada semester berjalan`,
-      totalAlfa: siswa.alfa,
-      hariTanggalPanggilan: nextMondayStr,
-      jamPanggilan: '09:00',
-      tempat: 'Ruang Bimbingan Konseling (BK) / Ruang Wali Kelas',
-      waliKelasNama: user.name,
-      waliKelasNip: user.identifier || '-',
-    });
-  };
+  }, [students, periodRecords]);
 
   const handleExportExcel = () => {
     exportAttendanceToExcel({
@@ -677,7 +654,7 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
           <div className="flex flex-col gap-3">
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs text-amber-900 leading-snug">
               <span className="font-bold block mb-0.5">⚠️ Pemantauan Kedisiplinan &amp; Kehadiran:</span>
-              Siswa dengan akumulasi Alfa &ge; 3 hari atau tingkat kehadiran di bawah 75% wajib ditindaklanjuti dengan penerbitan <strong>Surat Panggilan Orang Tua</strong>.
+              Daftar siswa dengan akumulasi Alfa &ge; 3 hari atau tingkat kehadiran di bawah 75% yang memerlukan perhatian khusus wali kelas.
             </div>
 
             {atRiskStudents.length === 0 ? (
@@ -739,20 +716,17 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
                       <div><span className="text-slate-400 block">Alfa</span><span className="font-bold text-rose-700">{siswa.alfa}</span></div>
                     </div>
 
-                    {/* Action Button */}
-                    <button
-                      onClick={() => handleOpenSuratModal(siswa)}
-                      className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm ${
-                        isCritical
-                          ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20'
-                          : 'bg-slate-900 hover:bg-slate-800 text-white'
-                      }`}
-                    >
+                    {/* Status Perhatian */}
+                    <div className={`py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 ${
+                      isCritical
+                        ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                        : 'bg-amber-100 text-amber-800 border border-amber-200'
+                    }`}>
                       <span className="material-symbols-outlined notranslate text-[16px]">
-                        outgoing_mail
+                        {isCritical ? 'warning' : 'info'}
                       </span>
-                      <span>Terbitkan Surat Panggilan Orang Tua</span>
-                    </button>
+                      <span>{isCritical ? 'Perlu Pembinaan Khusus Wali Kelas' : 'Dalam Pemantauan Kehadiran'}</span>
+                    </div>
                   </div>
                 );
               })}
@@ -857,16 +831,6 @@ export const WaliKelasDashboard: React.FC<WaliKelasDashboardProps> = ({
         students={studentStats as StudentRecapItem[]}
         avgRate={avgRate}
       />
-
-      {/* Surat Panggilan Modal */}
-      {selectedSuratData && (
-        <SuratPanggilanModal
-          isOpen={Boolean(selectedSuratData)}
-          onClose={() => setSelectedSuratData(null)}
-          data={selectedSuratData}
-          onShowToast={onShowToast}
-        />
-      )}
     </div>
   );
 };
